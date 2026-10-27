@@ -84,7 +84,7 @@ const DecisionsPage: PageWithLayout = () => {
         )
       ) : (
         <div aria-busy={list.loading}>
-          <div className={`grid gap-3 ${list.loading ? "opacity-60" : ""}`}>
+          <div className={`stagger grid gap-3 transition-opacity ${list.loading ? "opacity-60" : ""}`}>
             {list.data?.items.map((d) => <DecisionCard key={d.id} decision={d} />)}
           </div>
           {list.data && <Pagination total={list.data.total} limit={PAGE_SIZE} offset={offset} onChange={(o) => update({ offset: o || null })} />}

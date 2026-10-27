@@ -35,12 +35,24 @@ describe("api client", () => {
   });
 
   it("refreshes the session once on 401 and retries the request", async () => {
+    document.cookie = "ev_csrf=token123; path=/";
     const fetchMock = mockFetch(json(401, { detail: "Session expired" }), json(200, {}), json(200, { id: "me" }));
     await expect(api.get("/auth/me")).resolves.toEqual({ id: "me" });
     expect(fetchMock.mock.calls.map((c) => c[0])).toEqual(["/api/v1/auth/me", "/api/v1/auth/refresh", "/api/v1/auth/me"]);
   });
 
+  it("does not try to refresh without a session, but still reports being signed out", async () => {
+    const expired = vi.fn();
+    setSessionExpiredHandler(expired);
+    const fetchMock = mockFetch(json(401, { detail: "Not authenticated" }));
+    await expect(api.get("/auth/me")).rejects.toMatchObject({ status: 401 });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(expired).toHaveBeenCalledOnce();
+    setSessionExpiredHandler(null);
+  });
+
   it("reports session expiry when refresh fails", async () => {
+    document.cookie = "ev_csrf=token123; path=/";
     const expired = vi.fn();
     setSessionExpiredHandler(expired);
     mockFetch(json(401, { detail: "Session expired" }), json(401, { detail: "Session expired" }));

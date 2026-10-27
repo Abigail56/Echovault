@@ -16,8 +16,8 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="surface flex flex-col items-center px-6 py-12 text-center">
-      <div className="bg-base-200 mb-4 grid size-12 place-items-center rounded-full">
+    <div className="surface animate-page-in flex flex-col items-center px-6 py-12 text-center">
+      <div className="bg-base-200 animate-pop mb-4 grid size-12 place-items-center rounded-full">
         <Icon className="text-primary size-6" aria-hidden />
       </div>
       <h2 className="text-section">{title}</h2>

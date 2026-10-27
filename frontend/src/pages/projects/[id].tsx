@@ -144,7 +144,7 @@ const ProjectDetailPage: PageWithLayout = () => {
               ) : knowledge.loading ? (
                 <ListSkeleton rows={2} />
               ) : knowledge.data?.items.length ? (
-                <div className="grid gap-3">
+                <div className="stagger grid gap-3">
                   {knowledge.data.items.map((k) => <KnowledgeCard key={k.id} item={k} />)}
                   {knowledge.data.total > knowledge.data.items.length && (
                     <Link href={{ pathname: "/vault", query: { project: p.id } }} className="link link-primary text-sm">
@@ -171,7 +171,7 @@ const ProjectDetailPage: PageWithLayout = () => {
               ) : decisions.loading ? (
                 <ListSkeleton rows={2} />
               ) : decisions.data?.items.length ? (
-                <div className="grid gap-3">
+                <div className="stagger grid gap-3">
                   {decisions.data.items.map((d) => <DecisionCard key={d.id} decision={d} />)}
                   {decisions.data.total > decisions.data.items.length && (
                     <Link href={{ pathname: "/decisions", query: { project: p.id } }} className="link link-primary text-sm">

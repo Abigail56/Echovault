@@ -6,7 +6,7 @@ import { formatDate, formatDateTime } from "@/lib/format";
 
 export function DecisionCard({ decision }: { decision: DecisionSummary }) {
   return (
-    <article className="surface hover:border-primary/40 group relative p-5 transition-colors">
+    <article className="surface lift hover:border-primary/40 group relative p-5">
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-section min-w-0 break-words">
           <Link href={`/decisions/${decision.id}`} className="after:absolute after:inset-0 focus-visible:outline-none group-hover:text-primary">
