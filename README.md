@@ -27,7 +27,7 @@ A personal knowledge and project-intelligence workspace. Capture notes, group th
 
 ```
 Echovault/
-├── .github/workflows/ci.yml    # backend tests + frontend lint/typecheck/test/build
+├── .github/workflows/ci.yml    # backend tests, frontend checks, end-to-end browser tests
 ├── backend/
 │   ├── app/
 │   │   ├── main.py             # FastAPI app, middleware, error handlers, /health
@@ -52,6 +52,8 @@ Echovault/
     │   ├── lib/api/            # typed API client + endpoint functions
     │   ├── styles/globals.css  # Tailwind + DaisyUI themes (design tokens)
     │   └── test/               # test setup + page tests
+    ├── e2e/                    # Playwright end-to-end browser tests
+    ├── playwright.config.ts    # starts backend + frontend against the _e2e database
     ├── next.config.ts          # /api/v1 proxy to FastAPI, security headers
     └── .env.example
 ```
@@ -140,6 +142,27 @@ npm run build
 
 The backend test suite migrates the test database down to empty and back up to the latest version on every run, then empties all tables before each test. It refuses to run if the test database name doesn't end in `_test`.
 
+### End-to-end browser tests (Playwright)
+
+These drive a real Chromium browser through the real frontend and backend: registration, sign-in/out, session expiry, creating/editing/deleting notes, projects, decisions, search, cross-user privacy, the unconfigured assistant, and the phone layout.
+
+One-time setup:
+
+```bash
+docker exec echovault-nexus-db createdb -U echovault echovault_e2e   # separate database
+cd frontend && npx playwright install chromium                       # browser (~120 MB)
+```
+
+Run them (Playwright starts the backend on port 8011 and the frontend on 3011 by itself):
+
+```bash
+cd frontend
+npm run test:e2e               # headless
+npm run test:e2e -- --ui       # interactive: watch each step, great for debugging
+```
+
+The `echovault_e2e` database is **wiped and re-migrated at the start of every run**. Its URL is taken from `TEST_DATABASE_URL` with `_test` replaced by `_e2e`, or from `E2E_DATABASE_URL`. Playwright refuses to run unless the database name ends in `_e2e`. The e2e backend runs with `RATE_LIMIT_ENABLED=false` because the tests register many accounts. The backend refuses that setting when `ENVIRONMENT=production`.
+
 ## Database migrations
 
 ```bash
@@ -217,7 +240,7 @@ AI_MODEL=llama3.1
 - Rate limiting is per process (in memory). Use a shared store if you run several API instances.
 - Email address changes and account deletion aren't implemented.
 - No file uploads, imports/exports, knowledge graph, or team collaboration.
-- Frontend tests cover the API client, form utilities and the login page. Other pages were verified by end-to-end smoke tests and screenshots, not automated browser tests.
+- End-to-end tests cover the main journeys in Chromium only (not Firefox/Safari), and don't exercise the AI assistant with a real provider or password-reset emails.
 
 ## Deployment guide (not yet deployed)
 

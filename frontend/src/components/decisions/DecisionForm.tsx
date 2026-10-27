@@ -68,7 +68,9 @@ export function DecisionForm({ initial, submitLabel, onSubmit, onCancel }: Decis
           <input className="input w-full" placeholder="e.g. Use PostgreSQL for the main database" autoFocus={!initial?.title} {...register("title")} />
         </Field>
         <Field label="Project" optional error={errors.project_id?.message}>
-          <Controller control={control} name="project_id" render={({ field }) => <ProjectSelect value={field.value} onChange={field.onChange} />} />
+          {(props) => (
+            <Controller control={control} name="project_id" render={({ field }) => <ProjectSelect {...props} value={field.value} onChange={field.onChange} />} />
+          )}
         </Field>
       </div>
       {DECISION_SECTIONS.map((section) => (

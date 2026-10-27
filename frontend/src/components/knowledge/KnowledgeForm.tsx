@@ -85,10 +85,14 @@ export function KnowledgeForm({ initial, submitLabel, onSubmit, onCancel }: Know
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Tags" optional error={errors.tags?.message} hint="Press Enter or comma after each tag.">
-          <Controller control={control} name="tags" render={({ field }) => <TagInput value={field.value} onChange={field.onChange} />} />
+          {(props) => (
+            <Controller control={control} name="tags" render={({ field }) => <TagInput {...props} value={field.value} onChange={field.onChange} />} />
+          )}
         </Field>
         <Field label="Project" optional error={errors.project_id?.message}>
-          <Controller control={control} name="project_id" render={({ field }) => <ProjectSelect value={field.value} onChange={field.onChange} />} />
+          {(props) => (
+            <Controller control={control} name="project_id" render={({ field }) => <ProjectSelect {...props} value={field.value} onChange={field.onChange} />} />
+          )}
         </Field>
       </div>
 
