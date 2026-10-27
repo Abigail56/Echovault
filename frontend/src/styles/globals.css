@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+/* DaisyUI components, with only our own two themes (no built-in themes). */
+@plugin "daisyui" {
+  themes: false;
+}
+
+/*
+ * Design tokens. The brief's primary (#7775F5) is kept for the dark theme;
+ * on white it is slightly deepened (#5B58E6) so white button text meets
+ * WCAG AA contrast (4.5:1).
+ */
+@plugin "daisyui/theme" {
+  name: "echovault";
+  default: true;
+  color-scheme: light;
+  --color-base-100: #ffffff;
+  --color-base-200: #f7f8fc;
+  --color-base-300: #e3e7f0;
+  --color-base-content: #172033;
+  --color-primary: #5b58e6;
+  --color-primary-content: #ffffff;
+  --color-secondary: #55b8e8;
+  --color-secondary-content: #0b2533;
+  --color-accent: #7775f5;
+  --color-accent-content: #ffffff;
+  --color-neutral: #101525;
+  --color-neutral-content: #e6e9f2;
+  --color-info: #2f8fc4;
+  --color-info-content: #ffffff;
+  --color-success: #16856b;
+  --color-success-content: #ffffff;
+  --color-warning: #c58a25;
+  --color-warning-content: #1c1406;
+  --color-error: #c74652;
+  --color-error-content: #ffffff;
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+  --ev-muted: #5f6a80;
+  --ev-surface-sunken: #f1f3f9;
+}
+
+@plugin "daisyui/theme" {
+  name: "echovault-dark";
+  prefersdark: true;
+  color-scheme: dark;
+  --color-base-100: #171e30;
+  --color-base-200: #101525;
+  --color-base-300: #2a3550;
+  --color-base-content: #e6e9f2;
+  --color-primary: #7775f5;
+  --color-primary-content: #0d1020;
+  --color-secondary: #55b8e8;
+  --color-secondary-content: #0b2533;
+  --color-accent: #9a98ff;
+  --color-accent-content: #0d1020;
+  --color-neutral: #202a40;
+  --color-neutral-content: #e6e9f2;
+  --color-info: #55b8e8;
+  --color-info-content: #0b2533;
+  --color-success: #3fbf98;
+  --color-success-content: #05221a;
+  --color-warning: #e0a948;
+  --color-warning-content: #1c1406;
+  --color-error: #ef6f7a;
+  --color-error-content: #2a0a0e;
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+  --ev-muted: #a3acc2;
+  --ev-surface-sunken: #131a2b;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --color-muted: var(--ev-muted);
+  --color-sunken: var(--ev-surface-sunken);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-base-200 text-base-content antialiased;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Typography scale used across the app. */
+  .text-page-title {
+    @apply text-2xl font-semibold tracking-tight sm:text-[1.75rem];
+  }
+  .text-section {
+    @apply text-base font-semibold;
+  }
+  .text-meta {
+    @apply text-xs text-muted;
+  }
+  .surface {
+    @apply rounded-box border border-base-300 bg-base-100;
+  }
+}
+
+/* Rendered Markdown (notes, assistant answers). */
+.prose-ev {
+  overflow-wrap: anywhere;
+}
+.prose-ev > * + * {
+  margin-top: 0.75em;
+}
+.prose-ev h1 { @apply text-xl font-semibold; }
+.prose-ev h2 { @apply text-lg font-semibold; }
+.prose-ev h3 { @apply text-base font-semibold; }
+.prose-ev ul { @apply list-disc pl-6; }
+.prose-ev ol { @apply list-decimal pl-6; }
+.prose-ev a { @apply text-primary underline underline-offset-2; }
+.prose-ev blockquote { @apply border-l-4 border-base-300 pl-4 text-muted; }
+.prose-ev code { @apply rounded bg-sunken px-1 py-0.5 font-mono text-[0.9em]; }
+.prose-ev pre { @apply overflow-x-auto rounded-box bg-sunken p-4 text-sm; }
+.prose-ev pre code { @apply bg-transparent p-0; }
+.prose-ev table { @apply block overflow-x-auto text-sm; }
+.prose-ev th,
+.prose-ev td { @apply border border-base-300 px-3 py-1.5 text-left; }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

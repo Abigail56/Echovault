@@ -1,0 +1,31 @@
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    container_name: echovault-nexus-db
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: echovault
+      POSTGRES_USER: echovault
+      # Only used the FIRST time the volume is initialised. Changing it later
+      # does not change the password inside an existing volume (use ALTER ROLE).
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in backend/.env}
+
+    # Bound to localhost only. 5433 by default because many machines already
+    # run a system PostgreSQL on 5432.
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+
+    volumes:
+      - echovault_postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U echovault -d echovault
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  echovault_postgres_data:
