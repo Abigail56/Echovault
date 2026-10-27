@@ -17,11 +17,12 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { PublicFooter, PublicNav } from "@/components/layout/PublicLayout";
+import { Reveal } from "@/components/ui/Reveal";
 
 /** A static illustration of the workspace, built from the app's own styles. */
 function ProductPreview() {
   return (
-    <figure className="surface overflow-hidden shadow-xl shadow-black/5" aria-label="Illustration of the EchoVault workspace">
+    <figure className="surface animate-float overflow-hidden shadow-2xl shadow-primary/10" aria-label="Illustration of the EchoVault workspace">
       <div className="border-base-300 bg-base-200 flex items-center gap-1.5 border-b px-4 py-2.5" aria-hidden>
         <span className="bg-base-300 size-2.5 rounded-full" />
         <span className="bg-base-300 size-2.5 rounded-full" />
@@ -44,7 +45,7 @@ function ProductPreview() {
             );
           })}
         </div>
-        <div className="space-y-2.5 p-4">
+        <div className="stagger space-y-2.5 p-4">
           <div className="input input-sm pointer-events-none w-full">
             <Search className="text-muted size-3.5" /> <span className="text-muted text-xs">postgres index</span>
           </div>
@@ -74,8 +75,8 @@ function ProductPreview() {
 
 function Feature({ icon: Icon, title, children }: { icon: typeof BookOpen; title: string; children: ReactNode }) {
   return (
-    <div className="surface p-6">
-      <span className="bg-primary/10 text-primary mb-4 grid size-10 place-items-center rounded-field">
+    <div className="surface lift group h-full p-6">
+      <span className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-content mb-4 grid size-10 place-items-center rounded-field transition-colors duration-300">
         <Icon className="size-5" aria-hidden />
       </span>
       <h3 className="text-section">{title}</h3>
@@ -92,18 +93,22 @@ export default function Home() {
       </Head>
       <PublicNav />
       <main>
-        <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-14 pb-20 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:pt-24">
-          <div>
+        <section className="relative overflow-hidden">
+          <div aria-hidden className="glow-blob bg-primary top-[-6rem] left-[-6rem] size-[26rem]" />
+          <div aria-hidden className="glow-blob bg-secondary right-[-8rem] bottom-[-10rem] size-[30rem] [animation-delay:-6s]" />
+        <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 pt-14 pb-20 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:pt-24">
+          <div className="stagger">
             <p className="text-primary mb-4 text-sm font-medium">Personal knowledge &amp; project intelligence</p>
             <h1 className="text-4xl leading-[1.1] font-semibold tracking-tight sm:text-5xl">
-              Your knowledge. Connected. Searchable. Ready to use.
+              Your knowledge. Connected. Searchable.{" "}
+              <span className="from-primary to-secondary bg-gradient-to-r bg-clip-text text-transparent">Ready to use.</span>
             </h1>
             <p className="text-muted mt-5 max-w-xl text-lg">
               Capture your ideas, organise your projects, preserve important decisions, and rediscover what you know with a personal
               knowledge workspace built for clarity.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/register" className="btn btn-primary">
+              <Link href="/register" className="btn btn-primary nudge-icon shadow-primary/30 shadow-lg">
                 Create your free workspace <ArrowRight className="size-4" aria-hidden />
               </Link>
               <Link href="/login" className="btn btn-ghost">
@@ -111,14 +116,17 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          <ProductPreview />
+          <div className="animate-page-in [animation-delay:250ms]">
+            <ProductPreview />
+          </div>
+        </div>
         </section>
 
         <section id="features" className="bg-base-100 border-base-300 border-y py-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Everything you know, in one place</h2>
             <p className="text-muted mt-2 max-w-2xl">Four tools that work together, so information stays findable long after you save it.</p>
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Reveal className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Feature icon={BookOpen} title="Knowledge Vault">
                 Save notes, lessons and references in Markdown. Tag them and link them to projects.
               </Feature>
@@ -131,12 +139,12 @@ export default function Home() {
               <Feature icon={Search} title="Global search">
                 Full-text keyword search across everything you&apos;ve written, with partial-word matching.
               </Feature>
-            </div>
+            </Reveal>
           </div>
         </section>
 
         <section className="mx-auto grid max-w-6xl gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2">
-          <div>
+          <Reveal>
             <h2 className="text-2xl font-semibold tracking-tight">Decisions that keep their reasons</h2>
             <p className="text-muted mt-3">
               Months later, &quot;why did we do it this way?&quot; is the hardest question to answer. The Decision Journal keeps the
@@ -149,8 +157,8 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-          </div>
-          <div>
+          </Reveal>
+          <Reveal>
             <h2 className="text-2xl font-semibold tracking-tight">An assistant that shows its sources</h2>
             <p className="text-muted mt-3">
               Ask a question in plain language. The optional AI assistant answers only from notes in your own vault and links every
@@ -164,14 +172,14 @@ export default function Home() {
               </p>
             </div>
             <p className="text-meta mt-2">Illustrative example. The assistant needs an AI provider to be configured.</p>
-          </div>
+          </Reveal>
         </section>
 
         <section id="privacy" className="bg-base-100 border-base-300 border-y py-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Private by design</h2>
             <p className="text-muted mt-2 max-w-2xl">What the application actually does to protect your account and notes:</p>
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Reveal className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Feature icon={KeyRound} title="Hashed passwords">
                 Passwords are hashed with Argon2 and are never stored or logged in plain text.
               </Feature>
@@ -184,14 +192,14 @@ export default function Home() {
               <Feature icon={ServerCog} title="AI is opt-in">
                 Notes are only sent to an AI provider if the server has one configured, and only when you ask a question.
               </Feature>
-            </div>
+            </Reveal>
           </div>
         </section>
 
         <section className="mx-auto max-w-6xl px-4 py-20 text-center sm:px-6">
           <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Start building your knowledge base</h2>
           <p className="text-muted mx-auto mt-3 max-w-xl">It takes less than a minute to create an account and save your first note.</p>
-          <Link href="/register" className="btn btn-primary mt-8">
+          <Link href="/register" className="btn btn-primary nudge-icon mt-8">
             Get started <ArrowRight className="size-4" aria-hidden />
           </Link>
         </section>

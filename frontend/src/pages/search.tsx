@@ -77,7 +77,7 @@ const SearchPage: PageWithLayout = () => {
       ) : results.data.total === 0 ? (
         <EmptyState icon={SearchX} title={`No results for “${q}”`} description="Check the spelling, try fewer words, or search for a tag." />
       ) : (
-        <div className="space-y-4">
+        <div className="stagger space-y-4">
           <p className="text-meta" role="status">
             {results.data.total} {results.data.total === 1 ? "result" : "results"}
           </p>

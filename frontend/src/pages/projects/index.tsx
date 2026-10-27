@@ -88,7 +88,7 @@ const ProjectsPage: PageWithLayout = () => {
         )
       ) : (
         <div aria-busy={list.loading}>
-          <div className={`grid gap-3 sm:grid-cols-2 xl:grid-cols-3 ${list.loading ? "opacity-60" : ""}`}>
+          <div className={`stagger grid gap-3 transition-opacity sm:grid-cols-2 xl:grid-cols-3 ${list.loading ? "opacity-60" : ""}`}>
             {list.data?.items.map((p) => <ProjectCard key={p.id} project={p} />)}
           </div>
           {list.data && <Pagination total={list.data.total} limit={PAGE_SIZE} offset={offset} onChange={(o) => update({ offset: o || null })} />}

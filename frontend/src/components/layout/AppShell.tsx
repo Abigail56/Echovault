@@ -40,8 +40,10 @@ function isActive(pathname: string, href: string) {
 function NavLinks({ collapsed = false, onNavigate }: { collapsed?: boolean; onNavigate?: () => void }) {
   const { pathname } = useRouter();
   const linkClass = (active: boolean) =>
-    `flex items-center gap-3 rounded-field px-3 py-2 text-sm font-medium transition-colors ${
-      active ? "bg-primary/10 text-primary" : "text-muted hover:bg-base-200 hover:text-base-content"
+    `flex items-center gap-3 rounded-field px-3 py-2 text-sm font-medium transition-all duration-200 ${
+      active
+        ? "bg-primary/10 text-primary shadow-[inset_3px_0_0_var(--color-primary)]"
+        : "text-muted hover:bg-base-200 hover:text-base-content hover:translate-x-0.5"
     } ${collapsed ? "justify-center px-0" : ""}`;
 
   return (
@@ -99,7 +101,7 @@ function MobileNav() {
         <Menu className="size-5" aria-hidden />
       </button>
       <dialog ref={ref} className="modal justify-start lg:hidden" aria-label="Navigation">
-        <div className="bg-base-100 flex h-full w-72 max-w-[85vw] flex-col p-4 shadow-xl">
+        <div className="bg-base-100 slide-in-left flex h-full w-72 max-w-[85vw] flex-col p-4 shadow-xl">
           <div className="mb-6 flex items-center justify-between">
             <Logo href="/dashboard" />
             <button type="button" className="btn btn-ghost btn-square btn-sm" onClick={() => ref.current?.close()} aria-label="Close navigation">
@@ -310,7 +312,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
         <main id="main" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 outline-none sm:px-6 lg:py-8">
-          {children}
+          {/* Keyed by route so each page fades in on navigation (not on filter changes). */}
+          <div key={router.pathname} className="animate-page-in">
+            {children}
+          </div>
         </main>
       </div>
     </div>

@@ -14,7 +14,7 @@ A personal knowledge and project-intelligence workspace. Capture notes, group th
 | **Global search** | PostgreSQL full-text keyword search (prefix matching, stemming, ranking) across knowledge, tags, projects and decisions, grouped by type with highlighted excerpts. This is **keyword** search, not semantic search. |
 | **AI assistant** | Retrieves your matching notes, sends them to a configured provider (Claude, or any OpenAI-compatible server such as a local Ollama), returns the answer plus the real source records. If nothing relevant is found, the provider is not called. If no provider is configured, the page says so (nothing is faked). |
 | **Dashboard** | Real counts, recent knowledge/projects/decisions, quick actions, onboarding for empty accounts. |
-| **UI** | Light/dark/system theme, collapsible sidebar, mobile navigation, keyboard shortcut `/` for search, accessible dialogs, forms and focus states, reduced-motion support. Checked at 360–1440px widths. |
+| **UI** | Light/dark/system theme, subtle motion (page transitions, cascading lists, hover lift, count-up stats, scroll reveals; all disabled when the OS asks for reduced motion), collapsible sidebar, mobile navigation, keyboard shortcut `/` for search, accessible dialogs, forms and focus states, reduced-motion support. Checked at 360–1440px widths. |
 
 ## Tech stack
 

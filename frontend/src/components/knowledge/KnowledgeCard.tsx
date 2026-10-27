@@ -6,7 +6,7 @@ import { formatDateTime, timeAgo } from "@/lib/format";
 
 export function KnowledgeCard({ item }: { item: KnowledgeSummary }) {
   return (
-    <article className="surface hover:border-primary/40 group relative p-5 transition-colors">
+    <article className="surface lift hover:border-primary/40 group relative p-5">
       <h3 className="text-section break-words">
         <Link href={`/vault/${item.id}`} className="after:absolute after:inset-0 focus-visible:outline-none group-hover:text-primary">
           {item.title}

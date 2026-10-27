@@ -113,7 +113,7 @@ const VaultPage: PageWithLayout = () => {
           <p className="text-meta mb-3" role="status">
             {list.data?.total} {list.data?.total === 1 ? "item" : "items"}
           </p>
-          <div className={`grid gap-3 transition-opacity ${list.loading ? "opacity-60" : ""}`}>
+          <div className={`stagger grid gap-3 transition-opacity ${list.loading ? "opacity-60" : ""}`}>
             {list.data?.items.map((item) => <KnowledgeCard key={item.id} item={item} />)}
           </div>
           {list.data && <Pagination total={list.data.total} limit={PAGE_SIZE} offset={offset} onChange={(o) => update({ offset: o || null })} />}

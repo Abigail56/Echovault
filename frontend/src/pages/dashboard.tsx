@@ -8,6 +8,7 @@ import { ErrorState } from "@/components/ui/States";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useAsync } from "@/hooks/useAsync";
 import { useAuth } from "@/hooks/useAuth";
+import { useCountUp } from "@/hooks/useCountUp";
 import { decisionsApi, knowledgeApi, projectsApi, searchApi } from "@/lib/api/services";
 import { formatDateTime, timeAgo } from "@/lib/format";
 import type { PageWithLayout } from "@/lib/layout";
@@ -18,14 +19,15 @@ function greeting() {
 }
 
 function Stat({ label, value, href, icon: Icon }: { label: string; value: number | undefined; href: string; icon: typeof BookOpen }) {
+  const shown = useCountUp(value);
   return (
-    <Link href={href} className="surface hover:border-primary/40 flex items-center gap-4 p-4 transition-colors">
-      <span className="bg-primary/10 text-primary grid size-10 shrink-0 place-items-center rounded-field">
+    <Link href={href} className="surface lift hover:border-primary/40 group flex items-center gap-4 p-4">
+      <span className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-content grid size-10 shrink-0 place-items-center rounded-field transition-colors duration-300">
         <Icon className="size-5" aria-hidden />
       </span>
       <span className="min-w-0">
         <span className="block text-2xl leading-tight font-semibold tabular-nums">
-          {value === undefined ? <span className="skeleton inline-block h-6 w-8 align-middle" /> : value}
+          {shown === undefined ? <span className="skeleton inline-block h-6 w-8 align-middle" /> : shown}
         </span>
         <span className="text-meta block">{label}</span>
       </span>
@@ -38,7 +40,7 @@ function Panel({ title, href, children }: { title: string; href: string; childre
     <section className="surface flex min-w-0 flex-col">
       <div className="border-base-300 flex items-center justify-between border-b px-5 py-3">
         <h2 className="text-section">{title}</h2>
-        <Link href={href} className="link link-hover text-primary flex items-center gap-1 text-sm">
+        <Link href={href} className="link link-hover text-primary nudge-icon flex items-center gap-1 text-sm">
           View all <ArrowRight className="size-3.5" aria-hidden />
         </Link>
       </div>
@@ -59,7 +61,7 @@ function RowList({ rows, empty, loading }: { rows: { id: string; href: string; t
   }
   if (!rows.length) return <div className="text-muted p-5 text-sm">{empty}</div>;
   return (
-    <ul className="divide-base-300 divide-y">
+    <ul className="stagger divide-base-300 divide-y">
       {rows.map((row) => (
         <li key={row.id}>
           <Link href={row.href} className="hover:bg-base-200 flex items-center gap-3 px-5 py-3 transition-colors">
@@ -112,7 +114,7 @@ const Dashboard: PageWithLayout = () => {
       {stats.error ? (
         <ErrorState error={stats.error} onRetry={stats.reload} />
       ) : (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Stat label="Knowledge items" value={stats.data?.knowledge_count} href="/vault" icon={BookOpen} />
           <Stat label={`Projects (${stats.data?.active_project_count ?? 0} active)`} value={stats.data?.project_count} href="/projects" icon={FolderKanban} />
           <Stat label="Decisions" value={stats.data?.decision_count} href="/decisions" icon={Scale} />
@@ -126,14 +128,14 @@ const Dashboard: PageWithLayout = () => {
             Getting started
           </h2>
           <p className="text-muted mt-1 text-sm">Three small steps to make EchoVault useful:</p>
-          <ol className="mt-4 grid gap-3 sm:grid-cols-3">
+          <ol className="stagger mt-4 grid gap-3 sm:grid-cols-3">
             {[
               { n: 1, title: "Create a project", text: "Group related notes and decisions.", href: "/projects/new", icon: FolderKanban },
               { n: 2, title: "Capture a note", text: "Save an idea, a lesson or a snippet.", href: "/vault/new", icon: BookOpen },
               { n: 3, title: "Ask your notes", text: "Use search or the assistant to find it later.", href: "/assistant", icon: Bot },
             ].map((step) => (
               <li key={step.n}>
-                <Link href={step.href} className="hover:border-primary/40 border-base-300 flex h-full gap-3 rounded-box border p-4 transition-colors">
+                <Link href={step.href} className="lift hover:border-primary/40 border-base-300 flex h-full gap-3 rounded-box border p-4">
                   <step.icon className="text-primary mt-0.5 size-5 shrink-0" aria-hidden />
                   <span>
                     <span className="block text-sm font-medium">
@@ -148,7 +150,7 @@ const Dashboard: PageWithLayout = () => {
         </section>
       )}
 
-      <Link href="/search" className="surface hover:border-primary/40 text-muted mt-6 flex items-center gap-3 px-5 py-3 text-sm transition-colors">
+      <Link href="/search" className="surface lift hover:border-primary/40 text-muted mt-6 flex items-center gap-3 px-5 py-3 text-sm">
         <Search className="size-4" aria-hidden />
         Looking for something? Search notes, projects and decisions
         <kbd className="kbd kbd-sm ml-auto hidden sm:inline-flex">/</kbd>

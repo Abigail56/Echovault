@@ -46,7 +46,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={toast.id}
             role={toast.kind === "error" ? "alert" : "status"}
-            className={`alert ${toast.kind === "error" ? "alert-error" : "alert-success"} flex items-start gap-2 shadow-lg`}
+            className={`alert animate-toast-in ${toast.kind === "error" ? "alert-error" : "alert-success"} flex items-start gap-2 shadow-lg`}
           >
             {toast.kind === "error" ? <CircleAlert className="size-5 shrink-0" aria-hidden /> : <CheckCircle2 className="size-5 shrink-0" aria-hidden />}
             <span className="text-sm">{toast.message}</span>

@@ -121,7 +121,9 @@ export async function request<T>(method: Method, path: string, options: RequestO
   try {
     response = await send(method, path, options);
     if (response.status === 401 && !options.noRefresh) {
-      if (await refreshSession()) {
+      // Only attempt a refresh if there is a session to refresh (the CSRF
+      // cookie is set at sign-in); otherwise skip straight to "signed out".
+      if (readCookie("ev_csrf") && (await refreshSession())) {
         response = await send(method, path, options);
       } else {
         onSessionExpired?.();
