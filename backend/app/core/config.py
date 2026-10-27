@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     # Next.js rewrite), otherwise clients could spoof X-Forwarded-For.
     TRUST_PROXY_HEADERS: bool = False
 
+    # Only for automated browser tests, which register many users from one IP.
+    # Refused in production (see the validator below).
+    RATE_LIMIT_ENABLED: bool = True
+
     # Requests larger than this are rejected before reaching the handlers.
     MAX_REQUEST_BYTES: int = 1_000_000
 
@@ -63,6 +67,12 @@ class Settings(BaseSettings):
     @classmethod
     def _normalise_provider(cls, value: str | None) -> str:
         return (value or "").strip().lower()
+
+    @model_validator(mode="after")
+    def _forbid_unsafe_production_settings(self) -> "Settings":
+        if self.ENVIRONMENT == "production" and not self.RATE_LIMIT_ENABLED:
+            raise ValueError("RATE_LIMIT_ENABLED cannot be false in production")
+        return self
 
     @property
     def is_production(self) -> bool:

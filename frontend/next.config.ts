@@ -6,6 +6,8 @@ const backendUrl = (process.env.BACKEND_URL ?? "http://127.0.0.1:8000").replace(
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // The end-to-end tests use their own folder (see playwright.config.ts).
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   poweredByHeader: false,
   turbopack: {
     rules: {

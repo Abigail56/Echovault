@@ -21,6 +21,8 @@ class RateLimiter:
         self._lock = Lock()
 
     def hit(self, key: str, limit: int, window_seconds: int) -> None:
+        if not settings.RATE_LIMIT_ENABLED:
+            return
         now = time.monotonic()
         with self._lock:
             hits = self._hits[key]
