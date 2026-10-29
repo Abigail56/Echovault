@@ -213,11 +213,16 @@ Set in `backend/.env` and restart the backend:
 AI_PROVIDER=anthropic
 AI_API_KEY=sk-ant-...
 
-# OR a free local model with Ollama (https://ollama.com): `ollama pull llama3.1`
+# OR a free local model with Ollama (https://ollama.com), no account or payment needed
 AI_PROVIDER=openai_compatible
 AI_BASE_URL=http://127.0.0.1:11434/v1
-AI_MODEL=llama3.1
+AI_MODEL=qwen2.5:1.5b        # `ollama pull qwen2.5:1.5b`; use a bigger model (e.g. llama3.1) if you have the RAM
+AI_TIMEOUT_SECONDS=180
 ```
+
+**What to expect (verified):** with Claude, answers take a few seconds and cite sources as `[1]`, `[2]`. With `qwen2.5:1.5b` on a CPU-only laptop (Intel i5, ~1.2 GB RAM for the model), answers took 13–38 seconds and were grounded in the user's notes and decisions, but the model did not write citation markers (sources are then listed as "retrieved but not cited") and occasionally added a detail not in the notes. Isolation was verified with the real model: another user's note and an archived note were never sent, and an unanswerable question returned the "nothing found" message without calling the model at all. If the Anthropic account has no credit, users now see a clear "out of credit" message.
+
+Only one provider is active at a time. When switching, update `AI_PROVIDER`, `AI_API_KEY`, `AI_BASE_URL` and `AI_MODEL` together. In particular, `AI_BASE_URL` must be empty for Anthropic, and restart the backend.
 
 **Privacy implications:** when a user asks a question, up to `AI_MAX_SOURCES` (default 6) of *that user's* most relevant notes, plus the question, are sent to the configured provider. With `anthropic`, that data leaves your server and is handled under Anthropic's data policies. With a local Ollama, it stays on your machine. The assistant page tells users which provider receives their notes. Nothing is sent when no notes match.
 
