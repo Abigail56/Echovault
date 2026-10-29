@@ -14,6 +14,14 @@ import { TextViewer } from "./TextViewer";
 /** The panel's hidden file input; the "Attach files" header button opens it. */
 export const ATTACH_INPUT_ID = "attachment-file-input";
 
+/** Space/Enter on a <label> doesn't open the picker by default; make it keyboard-friendly. */
+export function openPickerOnKey(event: React.KeyboardEvent) {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    document.getElementById(ATTACH_INPUT_ID)?.click();
+  }
+}
+
 export const ACCEPT = "image/png,image/jpeg,image/gif,image/webp,application/pdf,text/plain,text/markdown,text/csv,.md,.txt,.csv";
 const POLL_MS = 2000;
 const POLL_LIMIT = 90; // about three minutes
@@ -60,7 +68,6 @@ export function AttachmentPanel({ noteId, initial, onAddToNote }: AttachmentPane
   const [viewing, setViewing] = useState<Attachment | null>(null);
   const [deleting, setDeleting] = useState<Attachment | null>(null);
   const [busyDelete, setBusyDelete] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
   const keyRef = useRef(0);
 
   const closeViewer = useCallback(() => setViewing(null), []);
@@ -174,9 +181,10 @@ export function AttachmentPanel({ noteId, initial, onAddToNote }: AttachmentPane
         <UploadCloud className="text-primary mx-auto size-8" aria-hidden />
         <p className="mt-2 text-sm">
           Drop files here,{" "}
-          <button type="button" className="link link-primary font-semibold" onClick={() => inputRef.current?.click()}>
+          {/* A <label> opens the file picker natively: no script needed, so it works in every browser. */}
+          <label htmlFor={ATTACH_INPUT_ID} role="button" tabIndex={0} onKeyDown={openPickerOnKey} className="link link-primary font-semibold">
             choose files
-          </button>
+          </label>
           , or paste a screenshot with <kbd className="kbd kbd-sm">Ctrl</kbd>+<kbd className="kbd kbd-sm">V</kbd>
         </p>
         <p className="text-meta mt-1">
@@ -190,7 +198,6 @@ export function AttachmentPanel({ noteId, initial, onAddToNote }: AttachmentPane
           </p>
         )}
         <input
-          ref={inputRef}
           id={ATTACH_INPUT_ID}
           type="file"
           multiple

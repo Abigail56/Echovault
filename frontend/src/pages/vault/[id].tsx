@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
 
-import { ATTACH_INPUT_ID, AttachmentPanel } from "@/components/attachments/AttachmentPanel";
+import { ATTACH_INPUT_ID, AttachmentPanel, openPickerOnKey } from "@/components/attachments/AttachmentPanel";
 import { KnowledgeForm } from "@/components/knowledge/KnowledgeForm";
 import { appLayout } from "@/components/layout/AppShell";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -111,16 +111,16 @@ const KnowledgeDetailPage: PageWithLayout = () => {
         actions={
           !editing && (
             <>
-              <button
-                type="button"
+              <label
+                htmlFor={ATTACH_INPUT_ID}
+                role="button"
+                tabIndex={0}
+                onKeyDown={openPickerOnKey}
                 className="btn btn-sm btn-primary"
-                onClick={() => {
-                  document.getElementById("attachments")?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  document.getElementById(ATTACH_INPUT_ID)?.click();
-                }}
+                onClick={() => document.getElementById("attachments")?.scrollIntoView({ behavior: "smooth", block: "start" })}
               >
                 <Paperclip className="size-4" aria-hidden /> Attach files
-              </button>
+              </label>
               <button type="button" className="btn btn-sm" onClick={() => setEditing(true)}>
                 <PencilLine className="size-4" aria-hidden /> Edit
               </button>
