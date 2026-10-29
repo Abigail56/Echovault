@@ -4,6 +4,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Query, status
 
 from app.api.deps import DbSession, OwnerId
+from app.models import DecisionStatus
 from app.schemas.common import Page
 from app.schemas.decision import DecisionCreate, DecisionPublic, DecisionSummary, DecisionUpdate
 from app.services import decision_service
@@ -17,13 +18,14 @@ def list_decisions(
     owner_id: OwnerId,
     q: Annotated[str | None, Query(max_length=200)] = None,
     project_id: uuid.UUID | None = None,
+    status_filter: Annotated[DecisionStatus | None, Query(alias="status")] = None,
     sort: decision_service.DecisionSort = "updated_at",
     order: Literal["asc", "desc"] = "desc",
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> Page[DecisionSummary]:
     items, total = decision_service.list_decisions(
-        db, owner_id, q=q, project_id=project_id, sort=sort, order=order, limit=limit, offset=offset
+        db, owner_id, q=q, project_id=project_id, status=status_filter, sort=sort, order=order, limit=limit, offset=offset
     )
     return Page(items=items, total=total, limit=limit, offset=offset)
 

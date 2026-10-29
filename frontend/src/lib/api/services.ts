@@ -6,6 +6,7 @@ import type {
   DashboardStats,
   Decision,
   DecisionInput,
+  DecisionStatus,
   DecisionSummary,
   Knowledge,
   KnowledgeInput,
@@ -14,6 +15,7 @@ import type {
   Project,
   ProjectInput,
   ProjectStatus,
+  SearchFilter,
   SearchResults,
   TagCount,
   User,
@@ -25,11 +27,15 @@ type SortOrder = "asc" | "desc";
 export const authApi = {
   config: () => api.get<AuthConfig>("/auth/config", { noRefresh: true }),
   me: () => api.get<User>("/auth/me"),
-  register: (body: { email: string; password: string; full_name: string }) =>
+  register: (body: { email: string; password: string; full_name: string; accept_terms: boolean; terms_version: string }) =>
     api.post<User>("/auth/register", body, { noRefresh: true }),
   login: (body: { email: string; password: string }) => api.post<User>("/auth/login", body, { noRefresh: true }),
   logout: () => api.post<void>("/auth/logout", undefined, { noRefresh: true }),
   logoutEverywhere: () => api.post<void>("/auth/logout-all"),
+  deleteAccount: (password: string) => api.post<void>("/auth/delete-account", { password }),
+  changeEmail: (new_email: string, password: string) => api.post<User>("/auth/change-email", { new_email, password }),
+  acceptTerms: (terms_version: string) => api.post<User>("/auth/accept-terms", { terms_version }),
+  exportData: () => api.get<Record<string, unknown>>("/auth/export"),
   updateProfile: (body: { full_name: string }) => api.patch<User>("/auth/me", body),
   changePassword: (body: { current_password: string; new_password: string }) =>
     api.post<void>("/auth/change-password", body),
@@ -43,6 +49,7 @@ export interface KnowledgeQuery {
   q?: string;
   tag?: string;
   project_id?: UUID;
+  archived?: boolean;
   sort?: "updated_at" | "created_at" | "title";
   order?: SortOrder;
   limit?: number;
@@ -54,7 +61,8 @@ export const knowledgeApi = {
     api.get<Page<KnowledgeSummary>>("/knowledge", { query: { ...query }, signal }),
   get: (id: UUID) => api.get<Knowledge>(`/knowledge/${id}`),
   create: (body: KnowledgeInput) => api.post<Knowledge>("/knowledge", body),
-  update: (id: UUID, body: Partial<KnowledgeInput>) => api.patch<Knowledge>(`/knowledge/${id}`, body),
+  update: (id: UUID, body: Partial<KnowledgeInput> & { archived?: boolean }) =>
+    api.patch<Knowledge>(`/knowledge/${id}`, body),
   remove: (id: UUID) => api.delete(`/knowledge/${id}`),
   tags: () => api.get<TagCount[]>("/tags"),
 };
@@ -80,6 +88,7 @@ export const projectsApi = {
 export interface DecisionQuery {
   q?: string;
   project_id?: UUID;
+  status?: DecisionStatus;
   sort?: "updated_at" | "created_at" | "title";
   order?: SortOrder;
   limit?: number;
@@ -96,7 +105,8 @@ export const decisionsApi = {
 };
 
 export const searchApi = {
-  search: (q: string, signal?: AbortSignal) => api.get<SearchResults>("/search", { query: { q, limit: 10 }, signal }),
+  search: (q: string, type: SearchFilter = "all", offset = 0, signal?: AbortSignal) =>
+    api.get<SearchResults>("/search", { query: { q, type, limit: type === "all" ? 5 : 20, offset }, signal }),
   stats: () => api.get<DashboardStats>("/dashboard/stats"),
 };
 

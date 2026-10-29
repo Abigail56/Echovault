@@ -24,6 +24,8 @@ export const registerSchema = z.object({
   full_name: z.string().trim().min(1, "Enter your name").max(120),
   email,
   password,
+  // Must be ticked by the user; it starts unticked.
+  accept_terms: z.boolean().refine((v) => v, "You need to accept the Terms and Conditions to create an account"),
 });
 export type RegisterValues = z.infer<typeof registerSchema>;
 
@@ -50,6 +52,7 @@ export const knowledgeSchema = z.object({
   content: z.string().max(100_000, "Content is too long (100,000 characters max)"),
   tags: z.array(z.string()).max(20, "Use at most 20 tags"),
   project_id: z.string().nullable(),
+  related_ids: z.array(z.string()).max(20, "Link at most 20 related notes"),
 });
 export type KnowledgeValues = z.infer<typeof knowledgeSchema>;
 
@@ -64,11 +67,16 @@ const longText = z.string().max(20_000, "Keep this under 20,000 characters");
 export const decisionSchema = z.object({
   title,
   context: longText,
+  problem: longText,
   decision: longText,
   reasoning: longText,
   alternatives: longText,
   expected_outcome: longText,
   actual_outcome: longText,
+  status: z.enum(["proposed", "accepted", "superseded", "reviewed"]),
   project_id: z.string().nullable(),
 });
 export type DecisionValues = z.infer<typeof decisionSchema>;
+
+export const changeEmailSchema = z.object({ new_email: email, password: z.string().min(1, "Enter your password") });
+export type ChangeEmailValues = z.infer<typeof changeEmailSchema>;

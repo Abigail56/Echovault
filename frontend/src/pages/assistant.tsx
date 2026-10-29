@@ -1,4 +1,4 @@
-import { Bot, FileText, Info, SendHorizontal, Settings, ShieldAlert, User } from "lucide-react";
+import { Bot, FileText, Info, Scale, SendHorizontal, Settings, ShieldAlert, User } from "lucide-react";
 import Head from "next/head";
 import Link from "next/link";
 import { type FormEvent, type KeyboardEvent, useEffect, useRef, useState } from "react";
@@ -38,18 +38,19 @@ function AnswerView({ answer }: { answer: AssistantAnswer }) {
       <Markdown>{answer.answer}</Markdown>
       {answer.sources.length > 0 && (
         <div className="mt-4">
-          <h3 className="text-meta mb-2 font-medium tracking-wide uppercase">Sources from your vault</h3>
+          <h3 className="text-meta mb-2 font-medium tracking-wide uppercase">Sources from your notes and decisions</h3>
           <ol className="grid gap-2">
             {[...cited, ...other].map((s) => (
               <li key={s.id}>
                 <Link
-                  href={`/vault/${s.id}`}
+                  href={s.type === "decision" ? `/decisions/${s.id}` : `/vault/${s.id}`}
                   className={`hover:border-primary/40 flex gap-3 rounded-field border p-3 transition-colors ${s.cited ? "border-base-300 bg-base-100" : "border-base-300/60 bg-base-100/60 opacity-80"}`}
                 >
                   <span className="badge badge-sm badge-primary badge-soft shrink-0">[{s.ref}]</span>
                   <span className="min-w-0">
                     <span className="flex items-center gap-1.5 text-sm font-medium">
-                      <FileText className="size-3.5 shrink-0" aria-hidden />
+                      {s.type === "decision" ? <Scale className="size-3.5 shrink-0" aria-hidden /> : <FileText className="size-3.5 shrink-0" aria-hidden />}
+                      <span className="sr-only">{s.type === "decision" ? "Decision:" : "Note:"}</span>
                       <span className="truncate">{s.title}</span>
                     </span>
                     {s.excerpt && <span className="text-muted line-clamp-2 block text-xs">{s.excerpt}</span>}
@@ -123,7 +124,7 @@ const AssistantPage: PageWithLayout = () => {
         <div className="surface max-w-2xl p-6">
           <div className="flex items-start gap-3">
             <Settings className="text-warning mt-0.5 size-5 shrink-0" aria-hidden />
-            <div className="space-y-2 text-sm">
+            <div className="min-w-0 space-y-2 text-sm">
               <h2 className="text-section">The assistant isn&apos;t set up yet</h2>
               <p className="text-muted">
                 No AI provider is configured on the server, so no questions can be answered. Nothing is simulated: once a provider is
@@ -164,7 +165,7 @@ AI_MODEL=llama3.1`}</pre>
       <div className="alert alert-soft alert-info mb-4 text-xs">
         <ShieldAlert className="size-4" aria-hidden />
         <span>
-          When you ask a question, the most relevant notes from your vault are sent to {status.data.provider === "anthropic" ? "Anthropic" : "the configured AI provider"} ({status.data.model})
+          When you ask a question, your most relevant notes and decisions (archived notes excluded) are sent to {status.data.provider === "anthropic" ? "Anthropic" : "the configured AI provider"} ({status.data.model})
           to generate the answer. Only your own notes are ever included.
         </span>
       </div>

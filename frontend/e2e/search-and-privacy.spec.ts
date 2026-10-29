@@ -16,7 +16,10 @@ test("global search from the header finds and opens a note", async ({ page }) =>
 
   await expect(page).toHaveURL(/\/search\?q=kubern/);
   await expect(page.getByRole("region", { name: "Decisions" }).getByRole("link", { name: /Adopt Kubernetes/ })).toBeVisible();
-  await page.getByRole("region", { name: "Knowledge" }).getByRole("link", { name: /Kubernetes rollout plan/ }).click();
+  await page.getByRole("tab", { name: /^Notes/ }).click();
+  await expect(page).toHaveURL(/type=knowledge/);
+  await expect(page.getByRole("region", { name: "Decisions" })).toHaveCount(0);
+  await page.getByRole("region", { name: "Notes" }).getByRole("link", { name: /Kubernetes rollout plan/ }).click();
   await expect(page).toHaveURL(new RegExp(`/vault/${note.id}$`));
 
   await page.goto("/search?q=zebra");
@@ -61,11 +64,46 @@ test.describe("on a phone", () => {
     await expect(page).toHaveURL(/\/decisions$/);
     await expect(nav).toBeHidden();
 
-    for (const path of ["/dashboard", "/vault/new", "/decisions/new", "/settings"]) {
+  });
+});
+
+test("no horizontal overflow from 320px to 1440px", async ({ page }) => {
+  test.setTimeout(600_000); // ~130 page loads
+  await signUpViaApi(page);
+  const note = await apiPost(page, "/knowledge", {
+    title: "An unusually long note title that should wrap gracefully on very small phone screens",
+    content: "# Heading\n\nA `code` span and a long URL https://example.com/a/very/long/path/that/must/not/overflow/the/layout",
+    tags: ["responsive", "layout"],
+  });
+  const decision = await apiPost(page, "/decisions", { title: "Choose the layout system", decision: "CSS grid", alternatives: "Flexbox only" });
+  const project = await apiPost(page, "/projects", { name: "Responsive audit", description: "Check every page" });
+  const pages = [
+    "/", "/login", "/register", "/terms", "/privacy", "/contact",
+    "/dashboard", "/vault", `/vault/${note.id}`, "/vault/new", "/projects", `/projects/${project.id}`,
+    "/decisions", `/decisions/${decision.id}`, "/decisions/new", "/search?q=layout", "/assistant", "/settings", "/profile",
+  ];
+  const problems: string[] = [];
+  for (const width of [320, 375, 430, 768, 1024, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const path of pages) {
       await page.goto(path);
-      await page.waitForLoadState("networkidle");
+      // Let the page's data load; don't wait forever on dev-server websockets.
+      await page.waitForLoadState("networkidle", { timeout: 4000 }).catch(() => undefined);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-      expect(overflow, `horizontal overflow on ${path}`).toBeLessThanOrEqual(0);
+      if (overflow > 0) problems.push(`${width}px ${path} overflows by ${overflow}px`);
     }
+  }
+  expect(problems).toEqual([]);
+});
+
+test.describe("phone sanity", () => {
+  test.use({ viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true });
+  test("header search works without a keyboard shortcut", async ({ page }) => {
+    await signUpViaApi(page);
+    await apiPost(page, "/knowledge", { title: "Pocket note" });
+    await page.goto("/dashboard");
+    await page.getByLabel("Search your workspace").fill("pocket");
+    await page.getByLabel("Search your workspace").press("Enter");
+    await expect(page.getByRole("region", { name: "Notes" }).getByRole("link", { name: /Pocket note/ })).toBeVisible();
   });
 });

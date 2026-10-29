@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
@@ -5,11 +6,15 @@ from fastapi.responses import JSONResponse
 
 from app.api.deps import Auth, DbSession, require_csrf
 from app.core.config import settings
+from app.core.legal import CURRENT_TERMS_VERSION
 from app.core.cookies import REFRESH_COOKIE, clear_auth_cookies, set_auth_cookies
 from app.core.rate_limit import client_ip, limiter
 from app.models import User
 from app.schemas.auth import (
+    AcceptTermsRequest,
     AuthConfig,
+    ChangeEmailRequest,
+    DeleteAccountRequest,
     LoginRequest,
     PasswordChangeRequest,
     PasswordResetConfirm,
@@ -19,7 +24,13 @@ from app.schemas.auth import (
     UserPublic,
 )
 from app.services import auth_service
-from app.services.email_service import EmailSender, get_email_sender, send_password_reset
+from app.services.email_service import (
+    EmailSender,
+    get_email_sender,
+    send_email_changed_notice,
+    send_password_reset,
+)
+from app.services.export_service import build_export
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -28,13 +39,13 @@ INVALID_CREDENTIALS = "Invalid email or password"
 
 @router.get("/config", response_model=AuthConfig)
 def auth_config() -> AuthConfig:
-    return AuthConfig(password_reset_available=settings.email_configured)
+    return AuthConfig(password_reset_available=settings.email_configured, terms_version=CURRENT_TERMS_VERSION)
 
 
 @router.post("/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
 def register(body: RegisterRequest, request: Request, response: Response, db: DbSession) -> UserPublic:
     limiter.hit(f"register:{client_ip(request)}", limit=10, window_seconds=3600)
-    user = auth_service.register_user(db, body.email, body.password, body.full_name)
+    user = auth_service.register_user(db, body.email, body.password, body.full_name, body.terms_version)
     tokens = auth_service.start_session(db, user, request.headers.get("user-agent"))
     set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
     return UserPublic.model_validate(user)
@@ -81,6 +92,44 @@ def logout(auth: Auth, response: Response, db: DbSession) -> None:
 def logout_everywhere(auth: Auth, response: Response, db: DbSession) -> None:
     """Sign out of every device, including this one."""
     auth_service.revoke_all_sessions(db, auth.user.id)
+    clear_auth_cookies(response)
+
+
+@router.post("/change-email", response_model=UserPublic, dependencies=[Depends(require_csrf)])
+def change_email(
+    body: ChangeEmailRequest,
+    auth: Auth,
+    db: DbSession,
+    sender: Annotated[EmailSender | None, Depends(get_email_sender)],
+) -> UserPublic:
+    limiter.hit(f"change-email:{auth.user.id}", limit=5, window_seconds=900)
+    old_email = auth_service.change_email(db, auth.user, body.new_email, body.password)
+    if sender is not None:
+        send_email_changed_notice(sender, old_email, auth.user.full_name)
+    return UserPublic.model_validate(auth.user)
+
+
+@router.post("/accept-terms", response_model=UserPublic, dependencies=[Depends(require_csrf)])
+def accept_terms(body: AcceptTermsRequest, auth: Auth, db: DbSession) -> UserPublic:
+    """Record acceptance of the current Terms (used after the Terms change)."""
+    auth_service.accept_terms(db, auth.user, body.terms_version)
+    return UserPublic.model_validate(auth.user)
+
+
+@router.get("/export")
+def export_data(auth: Auth, db: DbSession) -> JSONResponse:
+    """Download everything stored for this account as JSON."""
+    limiter.hit(f"export:{auth.user.id}", limit=10, window_seconds=3600)
+    data = build_export(db, auth.user)
+    filename = f"echovault-export-{datetime.now(UTC):%Y-%m-%d}.json"
+    return JSONResponse(data, headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+
+
+@router.post("/delete-account", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(require_csrf)])
+def delete_account(body: DeleteAccountRequest, auth: Auth, response: Response, db: DbSession) -> None:
+    """Permanently delete the account and everything in it. Requires the password."""
+    limiter.hit(f"delete-account:{auth.user.id}", limit=5, window_seconds=900)
+    auth_service.delete_account(db, auth.user, body.password)
     clear_auth_cookies(response)
 
 

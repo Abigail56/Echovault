@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { Field } from "@/components/ui/Field";
+import { SaveStatus } from "@/components/ui/SaveStatus";
 import { InlineError } from "@/components/ui/States";
 import { PROJECT_STATUSES } from "@/components/ui/StatusBadge";
 import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
@@ -59,6 +60,7 @@ export function ProjectForm({ initial, submitLabel, onSubmit, onCancel }: Projec
         </select>
       </Field>
       <div className="border-base-300 flex flex-col-reverse gap-2 border-t pt-5 sm:flex-row sm:justify-end">
+        <SaveStatus dirty={isDirty} saving={isSubmitting} existing={Boolean(initial?.name)} />
         <button type="button" className="btn btn-ghost" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </button>

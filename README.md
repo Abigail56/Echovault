@@ -6,15 +6,16 @@ A personal knowledge and project-intelligence workspace. Capture notes, group th
 
 | Area | What works today |
 |---|---|
-| **Accounts** | Register, sign in, sign out, sign out of all devices, profile editing, password change. Argon2 password hashing. HttpOnly cookie sessions with refresh-token rotation, server-side revocation and CSRF protection. Rate-limited auth endpoints. |
+| **Accounts** | Register (with Terms acceptance), sign in, sign out, sign out of all devices, profile editing, email change (password-confirmed), password change, JSON data export, re-acceptance of updated Terms, self-service account deletion (password + typed confirmation; deletes all data). Argon2 password hashing. HttpOnly cookie sessions with refresh-token rotation, server-side revocation and CSRF protection. Rate-limited auth endpoints. |
 | **Password reset** | Full email flow (single-use, expiring, hashed tokens; no account enumeration). Needs SMTP settings; without them, the UI says it isn't configured. |
-| **Knowledge Vault** | Create, read, update, delete. Markdown editor with preview (rendered safely, no raw HTML). Tags, project links, keyword search, tag/project filters, sorting, pagination, unsaved-changes warning. |
+| **Knowledge Vault** | Create, read, update, delete, archive/restore. Markdown editor with preview (rendered safely, no raw HTML). Tags, project links, two-way related-note links, a connection map of each note's project, decisions and related notes, keyword search, tag/project filters, sorting, pagination, save status and unsaved-changes warning. |
 | **Projects** | CRUD, statuses (active / on hold / completed / archived), linked knowledge and decisions, counts. Deleting a project keeps its notes and decisions. |
-| **Decision Journal** | Context, decision, reasoning, alternatives, expected and actual outcome. Project links, search, filters. |
-| **Global search** | PostgreSQL full-text keyword search (prefix matching, stemming, ranking) across knowledge, tags, projects and decisions, grouped by type with highlighted excerpts. This is **keyword** search, not semantic search. |
-| **AI assistant** | Retrieves your matching notes, sends them to a configured provider (Claude, or any OpenAI-compatible server such as a local Ollama), returns the answer plus the real source records. If nothing relevant is found, the provider is not called. If no provider is configured, the page says so (nothing is faked). |
-| **Dashboard** | Real counts, recent knowledge/projects/decisions, quick actions, onboarding for empty accounts. |
-| **UI** | Light/dark/system theme, subtle motion (page transitions, cascading lists, hover lift, count-up stats, scroll reveals; all disabled when the OS asks for reduced motion), collapsible sidebar, mobile navigation, keyboard shortcut `/` for search, accessible dialogs, forms and focus states, reduced-motion support. Checked at 360–1440px widths. |
+| **Decision Journal** | Context, problem statement, alternatives, selected option, reasoning, expected and actual outcome. Status (proposed / accepted / superseded / reviewed) and last-review date. Project links, search, status/project filters. |
+| **Global search** | PostgreSQL full-text keyword search (prefix matching, stemming, ranking) across notes (including archived, labelled), tags, projects and decisions. Grouped by type with counts, type filters, pagination and highlighted excerpts. This is **keyword** search, not semantic search. |
+| **AI assistant** | Retrieves your matching notes and decisions (archived notes excluded), sends them to a configured provider (Claude, or any OpenAI-compatible server such as a local Ollama), returns the answer plus the real source records. If nothing relevant is found, the provider is not called. If no provider is configured, the page says so (nothing is faked). |
+| **Overview** | Real counts, a recent-activity feed across all record types, active projects, recent notes and decisions, quick actions, onboarding for empty accounts. |
+| **Legal** | Terms and Conditions, Privacy Policy, Acceptable Use Policy, Cookie Policy and Contact pages, linked from the footer and the sign-up form. The accepted Terms version and time are stored per user. |
+| **UI** | Dark-first design system (light and system themes available), brand mark and favicon, restrained motion (page transitions, cascading lists, hover lift, count-up stats, scroll reveals; all disabled when the OS asks for reduced motion), collapsible sidebar, mobile navigation, keyboard shortcut `/` for search, accessible dialogs, forms and focus states, reduced-motion support. Automated test checks 19 pages for horizontal overflow at 320, 375, 430, 768, 1024, 1280 and 1440px. |
 
 ## Tech stack
 
@@ -222,6 +223,17 @@ AI_MODEL=llama3.1
 
 **Prompt-injection defence:** notes are wrapped as escaped `<source>` data, the system prompt tells the model never to follow instructions inside sources, and only records the backend retrieved for that user can appear as sources. Citation numbers that don't match a retrieved source are ignored. This reduces risk but can't make a language model fully immune, so treat answers as suggestions and check the linked sources.
 
+## Legal documents and Terms versions
+
+The legal pages live in `frontend/src/pages/{terms,privacy,acceptable-use,cookies,contact}.tsx`. Business details (operator name, address, contact and privacy emails, governing law) are set with `NEXT_PUBLIC_*` variables in `frontend/.env.local` (see `frontend/.env.example`); unset values appear as visible `[placeholders]`, and configured email addresses become clickable `mailto:` links. Restart `npm run dev` (or rebuild) after changing them.
+
+Sign-up requires ticking an unticked-by-default Terms checkbox. The frontend sends the Terms version it displayed, and the backend stores it with the acceptance time (`users.terms_version`, `users.terms_accepted_at`). When you change the Terms materially:
+
+1. Update `CURRENT_TERMS_VERSION` in `backend/app/core/legal.py`.
+2. Update `TERMS_VERSION` and `LEGAL_LAST_UPDATED` in `frontend/src/lib/legal.ts` to match.
+
+The backend rejects sign-ups that accepted an older version, asking the user to reload. Signed-in users whose accepted version is older see a prompt to review and accept the new Terms (with an unticked box); Settings stays reachable so they can download their data or delete their account instead.
+
 ## Troubleshooting
 
 | Problem | Fix |
@@ -231,6 +243,7 @@ AI_MODEL=llama3.1
 | `Address already in use` on 8000 or 3000 | Run on other ports: `uvicorn app.main:app --port 8010` and `BACKEND_URL=http://127.0.0.1:8010 npm run dev -- -p 3001`. |
 | Frontend API calls hit the wrong server after `next build` | `BACKEND_URL` is baked in **at build time**. Rebuild with the right value: `BACKEND_URL=... npm run build`. |
 | Every API call returns 403 "CSRF check failed" | The `ev_csrf` cookie is missing. Sign out and back in. When calling the API by hand, send the cookie value in `X-CSRF-Token`. |
+| Build fails with `Duplicate identifier 'PagesPageConfig'` | Leftover type files from `next dev` clash with the production build's. Stop the dev server, delete `frontend/.next`, and build again. |
 | Tests fail with "Refusing to run" | Set `TEST_DATABASE_URL` to a database whose name ends in `_test`. |
 
 ## Current limitations
@@ -238,7 +251,9 @@ AI_MODEL=llama3.1
 - Search is keyword-based (PostgreSQL full-text). Semantic/vector search is not implemented yet. The database image supports pgvector for when it is.
 - Assistant conversations aren't saved, and each question is answered independently.
 - Rate limiting is per process (in memory). Use a shared store if you run several API instances.
-- Email address changes and account deletion aren't implemented.
+- Email changes take effect immediately after re-entering the password (the old address is notified when SMTP is configured); the new address is not verified by a confirmation link.
+- The updated-Terms prompt is enforced in the web app; the API itself does not block requests from users who haven't re-accepted.
+- **Legal pages are drafts.** They describe how the software actually works, but every `[bracketed]` item (operator name, address, contact emails, AI/email/hosting providers, retention periods, jurisdiction, minimum age, liability cap) must be filled in, and the text reviewed by a lawyer, before a public launch.
 - No file uploads, imports/exports, knowledge graph, or team collaboration.
 - End-to-end tests cover the main journeys in Chromium only (not Firefox/Safari), and don't exercise the AI assistant with a real provider or password-reset emails.
 

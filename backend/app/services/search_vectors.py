@@ -41,6 +41,7 @@ def decision_vector() -> ColumnElement[str]:
         _join(
             col(Decision.title),
             col(Decision.context),
+            col(Decision.problem),
             col(Decision.decision),
             col(Decision.reasoning),
             col(Decision.alternatives),

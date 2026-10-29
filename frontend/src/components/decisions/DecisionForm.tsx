@@ -2,20 +2,25 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
+import { DECISION_STATUSES } from "@/components/decisions/DecisionStatusBadge";
 import { Field } from "@/components/ui/Field";
 import { ProjectSelect } from "@/components/ui/ProjectSelect";
+import { SaveStatus } from "@/components/ui/SaveStatus";
 import { InlineError } from "@/components/ui/States";
 import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 import { applyServerErrors } from "@/lib/forms";
 import { decisionSchema, type DecisionValues } from "@/lib/schemas";
 
-export const DECISION_SECTIONS: { name: keyof Omit<DecisionValues, "title" | "project_id">; label: string; hint: string }[] = [
-  { name: "context", label: "Context", hint: "What problem or situation led to this decision?" },
-  { name: "decision", label: "Decision", hint: "What did you decide to do?" },
+export type DecisionTextField = keyof Omit<DecisionValues, "title" | "project_id" | "status">;
+
+export const DECISION_SECTIONS: { name: DecisionTextField; label: string; hint: string }[] = [
+  { name: "context", label: "Context", hint: "What situation are you in? What constraints apply?" },
+  { name: "problem", label: "Problem statement", hint: "What exactly needs deciding?" },
+  { name: "alternatives", label: "Alternatives considered", hint: "Which options did you weigh? Their pros and cons." },
+  { name: "decision", label: "Selected option", hint: "What did you choose?" },
   { name: "reasoning", label: "Reasoning", hint: "Why this option? What evidence or values drove it?" },
-  { name: "alternatives", label: "Alternatives considered", hint: "What else did you consider, and why not those?" },
-  { name: "expected_outcome", label: "Expected outcome", hint: "What do you expect to happen?" },
-  { name: "actual_outcome", label: "Actual outcome / review notes", hint: "Come back later: what actually happened?" },
+  { name: "expected_outcome", label: "Expected outcome", hint: "What do you expect to happen, and how will you know?" },
+  { name: "actual_outcome", label: "Actual outcome / review", hint: "Come back later: what actually happened?" },
 ];
 
 interface DecisionFormProps {
@@ -39,6 +44,8 @@ export function DecisionForm({ initial, submitLabel, onSubmit, onCancel }: Decis
     defaultValues: {
       title: "",
       context: "",
+      problem: "",
+      status: "accepted",
       decision: "",
       reasoning: "",
       alternatives: "",
@@ -63,9 +70,18 @@ export function DecisionForm({ initial, submitLabel, onSubmit, onCancel }: Decis
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-5">
       <InlineError message={formError} />
-      <div className="grid gap-5 sm:grid-cols-[1fr_16rem]">
-        <Field label="Title" error={errors.title?.message}>
-          <input className="input w-full" placeholder="e.g. Use PostgreSQL for the main database" autoFocus={!initial?.title} {...register("title")} />
+      <Field label="Title" error={errors.title?.message}>
+        <input className="input w-full" placeholder="e.g. Use PostgreSQL for the main database" autoFocus={!initial?.title} {...register("title")} />
+      </Field>
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="Status" error={errors.status?.message}>
+          <select className="select w-full" {...register("status")}>
+            {DECISION_STATUSES.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}: {s.hint}
+              </option>
+            ))}
+          </select>
         </Field>
         <Field label="Project" optional error={errors.project_id?.message}>
           {(props) => (
@@ -79,6 +95,7 @@ export function DecisionForm({ initial, submitLabel, onSubmit, onCancel }: Decis
         </Field>
       ))}
       <div className="border-base-300 flex flex-col-reverse gap-2 border-t pt-5 sm:flex-row sm:justify-end">
+        <SaveStatus dirty={isDirty} saving={isSubmitting} existing={Boolean(initial?.title)} />
         <button type="button" className="btn btn-ghost" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </button>

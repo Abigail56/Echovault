@@ -49,3 +49,30 @@ def test_decision_isolation(user_client, other_client):
     assert other_client.patch(path, json={"title": "x"}).status_code == 404
     assert other_client.delete(path).status_code == 404
     assert other_client.get(API, params={"q": "secret"}).json()["total"] == 0
+
+
+def test_status_problem_and_review_date(user_client):
+    created = user_client.post(
+        API, json={"title": "Pick a queue", "problem": "Jobs are lost on restart", "status": "proposed"}
+    ).json()
+    assert created["status"] == "proposed"
+    assert created["problem"] == "Jobs are lost on restart"
+    assert created["reviewed_at"] is None
+
+    # The problem statement is searchable.
+    assert user_client.get(API, params={"q": "restart"}).json()["total"] == 1
+
+    accepted = user_client.patch(f"{API}/{created['id']}", json={"status": "accepted"}).json()
+    assert accepted["reviewed_at"] is None
+    reviewed = user_client.patch(f"{API}/{created['id']}", json={"actual_outcome": "No lost jobs since."}).json()
+    assert reviewed["reviewed_at"] is not None
+    first_review = reviewed["reviewed_at"]
+    # Saving other fields doesn't count as a new review.
+    again = user_client.patch(
+        f"{API}/{created['id']}", json={"title": "Pick a job queue", "actual_outcome": "No lost jobs since."}
+    ).json()
+    assert again["reviewed_at"] == first_review
+
+    assert user_client.patch(f"{API}/{created['id']}", json={"status": "bogus"}).status_code == 422
+    user_client.post(API, json={"title": "Other", "status": "superseded"})
+    assert [d["title"] for d in user_client.get(API, params={"status": "superseded"}).json()["items"]] == ["Other"]

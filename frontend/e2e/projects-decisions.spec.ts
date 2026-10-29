@@ -21,7 +21,7 @@ test("create a project, link a note to it and change its status", async ({ page 
   await expect(page.getByRole("combobox", { name: /^Project/ })).toHaveValue(projectUrl.split("/").pop()!);
   await page.getByLabel("Title").fill("Hosting options");
   await page.getByRole("button", { name: "Save to vault" }).click();
-  await expect(page.getByRole("link", { name: "Portfolio website" })).toBeVisible();
+  await expect(page.getByRole("complementary").getByRole("link", { name: "Portfolio website" })).toBeVisible();
 
   await page.goto(projectUrl);
   await expect(page.getByRole("region", { name: "Knowledge (1)" }).getByRole("link", { name: "Hosting options" })).toBeVisible();
@@ -38,20 +38,27 @@ test("record a decision and review its outcome later", async ({ page }) => {
   await page.goto("/decisions/new");
   await page.getByLabel("Title").fill("Use PostgreSQL");
   await page.getByRole("textbox", { name: /^Context/ }).fill("We need full-text search.");
-  await page.getByRole("textbox", { name: /^Decision/ }).fill("Adopt PostgreSQL 17.");
+  await page.getByRole("textbox", { name: /^Problem statement/ }).fill("Which database fits?");
+  await page.getByRole("textbox", { name: /^Selected option/ }).fill("Adopt PostgreSQL 17.");
   await page.getByRole("textbox", { name: /^Reasoning/ }).fill("Mature and free.");
   await page.getByRole("button", { name: "Save decision" }).click();
 
   await expect(page).toHaveURL(/\/decisions\/[0-9a-f-]{36}$/);
   await expect(page.getByRole("region", { name: "Reasoning" })).toContainText("Mature and free.");
-  await expect(page.getByRole("region", { name: "Actual outcome / review notes" })).toContainText("Not reviewed yet");
+  await expect(page.getByRole("region", { name: "Selected option" })).toContainText("Adopt PostgreSQL 17.");
+  await expect(page.getByRole("region", { name: "Actual outcome / review" })).toContainText("Not reviewed yet");
 
   await page.getByRole("button", { name: "Add review notes" }).click();
   await page.getByRole("textbox", { name: /^Actual outcome/ }).fill("Worked well; search is fast.");
   await page.getByRole("button", { name: "Save changes" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Decision updated" })).toBeVisible();
 
-  await page.goto("/decisions");
+  await expect(page.getByText(/^Last reviewed/)).toBeVisible();
+
+  await page.getByRole("button", { name: "Mark reviewed" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Status updated" })).toBeVisible();
+  await page.goto("/decisions?status=reviewed");
   const card = page.getByRole("article").filter({ hasText: "Use PostgreSQL" });
-  await expect(card.getByText("Reviewed")).toBeVisible();
+  await expect(card.getByText("Reviewed", { exact: true })).toBeVisible();
+  await expect(card.getByText(/^Last reviewed/)).toBeVisible();
 });

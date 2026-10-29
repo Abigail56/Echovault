@@ -34,6 +34,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy import text  # noqa: E402
 from sqlmodel import Session  # noqa: E402
 
+from app.core.legal import CURRENT_TERMS_VERSION  # noqa: E402
 from app.core.rate_limit import limiter  # noqa: E402
 from app.db.session import engine  # noqa: E402
 from app.main import app  # noqa: E402
@@ -82,11 +83,22 @@ def new_client() -> TestClient:
     return TestClient(app)
 
 
+def registration(email: str, name: str = "Ada Lovelace", **overrides) -> dict:
+    """A valid sign-up payload (including Terms acceptance)."""
+    payload = {
+        "email": email,
+        "password": PASSWORD,
+        "full_name": name,
+        "accept_terms": True,
+        "terms_version": CURRENT_TERMS_VERSION,
+    }
+    payload.update(overrides)
+    return payload
+
+
 def sign_up(client: TestClient, email: str = "ada@example.com", name: str = "Ada Lovelace") -> dict:
     """Register, then attach the CSRF header like the real frontend does."""
-    response = client.post(
-        "/api/v1/auth/register", json={"email": email, "password": PASSWORD, "full_name": name}
-    )
+    response = client.post("/api/v1/auth/register", json=registration(email, name))
     assert response.status_code == 201, response.text
     client.headers["X-CSRF-Token"] = client.cookies["ev_csrf"]
     return response.json()

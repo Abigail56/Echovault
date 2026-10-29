@@ -112,3 +112,50 @@ def test_excerpt_is_plain_text(user_client):
     assert excerpt == "Heading Bold item with a link code"
     create(user_client, title="Code", content="Call `get_user_by_id` from snake_case_module")
     assert user_client.get(API).json()["items"][0]["excerpt"] == "Call get_user_by_id from snake_case_module"
+
+
+def test_archive_and_restore(user_client):
+    item = create(user_client, title="Old idea")
+    create(user_client, title="Current idea")
+    archived = user_client.patch(f"{API}/{item['id']}", json={"archived": True}).json()
+    assert archived["archived_at"] is not None
+
+    assert [i["title"] for i in user_client.get(API).json()["items"]] == ["Current idea"]
+    assert [i["title"] for i in user_client.get(API, params={"archived": True}).json()["items"]] == ["Old idea"]
+    stats = user_client.get("/api/v1/dashboard/stats").json()
+    assert (stats["knowledge_count"], stats["archived_knowledge_count"]) == (1, 1)
+    # Archived notes still turn up in global search, labelled.
+    hit = user_client.get("/api/v1/search", params={"q": "old"}).json()["knowledge"][0]
+    assert hit["label"] == "Archived"
+
+    restored = user_client.patch(f"{API}/{item['id']}", json={"archived": False}).json()
+    assert restored["archived_at"] is None
+    assert user_client.get(API).json()["total"] == 2
+
+
+def test_related_notes_are_two_way(user_client):
+    a = create(user_client, title="A")
+    b = create(user_client, title="B")
+    c = create(user_client, title="C", related_ids=[a["id"], b["id"], a["id"]])
+    assert [r["title"] for r in c["related"]] == ["A", "B"]
+    # The link shows from the other side too.
+    assert [r["title"] for r in user_client.get(f"{API}/{a['id']}").json()["related"]] == ["C"]
+
+    updated = user_client.patch(f"{API}/{c['id']}", json={"related_ids": [b["id"]]}).json()
+    assert [r["title"] for r in updated["related"]] == ["B"]
+    assert user_client.get(f"{API}/{a['id']}").json()["related"] == []
+
+    # Linking to itself is ignored; deleting a note removes its links.
+    assert user_client.patch(f"{API}/{b['id']}", json={"related_ids": [b["id"]]}).json()["related"] == []
+    user_client.patch(f"{API}/{a['id']}", json={"related_ids": [b["id"]]})
+    user_client.delete(f"{API}/{b['id']}")
+    assert user_client.get(f"{API}/{a['id']}").json()["related"] == []
+
+
+def test_cannot_link_another_users_note(user_client, other_client):
+    foreign = other_client.post(API, json={"title": "Theirs"}).json()
+    response = user_client.post(API, json={"title": "Mine", "related_ids": [foreign["id"]]})
+    assert response.status_code == 422
+    mine = create(user_client, title="Mine")
+    assert user_client.patch(f"{API}/{mine['id']}", json={"related_ids": [foreign["id"]]}).status_code == 422
+    assert other_client.get(f"{API}/{foreign['id']}").json()["related"] == []

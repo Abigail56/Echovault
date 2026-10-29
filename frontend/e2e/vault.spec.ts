@@ -42,7 +42,7 @@ test("create, view, edit and delete a knowledge item", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1, name: "Docker named volumes" })).toBeVisible();
 
   await page.getByRole("button", { name: "Delete" }).click();
-  const dialog = page.getByRole("dialog", { name: "Delete this knowledge item?" });
+  const dialog = page.getByRole("dialog", { name: "Delete this note?" });
   await expect(dialog).toBeVisible();
   await dialog.getByRole("button", { name: "Cancel" }).click();
   await expect(dialog).toBeHidden();

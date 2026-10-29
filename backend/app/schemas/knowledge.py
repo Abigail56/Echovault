@@ -15,6 +15,13 @@ def _dedupe(tags: list[str]) -> list[str]:
 
 
 TagList = Annotated[list[TagName], Field(max_length=20), AfterValidator(_dedupe)]
+RelatedIds = Annotated[list[uuid.UUID], Field(max_length=20), AfterValidator(_dedupe)]
+
+
+class KnowledgeRef(BaseModel):
+    id: uuid.UUID
+    title: str
+    archived: bool
 
 
 class KnowledgeCreate(BaseModel):
@@ -22,6 +29,7 @@ class KnowledgeCreate(BaseModel):
     content: LongText = ""
     tags: TagList = []
     project_id: uuid.UUID | None = None
+    related_ids: RelatedIds = []
 
 
 class KnowledgeUpdate(BaseModel):
@@ -34,6 +42,9 @@ class KnowledgeUpdate(BaseModel):
     content: LongText | None = None
     tags: TagList | None = None
     project_id: uuid.UUID | None = None
+    related_ids: RelatedIds | None = None
+    # true archives the note, false restores it.
+    archived: bool | None = None
 
 
 class KnowledgeSummary(BaseModel):
@@ -42,12 +53,14 @@ class KnowledgeSummary(BaseModel):
     excerpt: str
     tags: list[str]
     project: ProjectRef | None
+    archived_at: datetime | None
     created_at: datetime
     updated_at: datetime
 
 
 class KnowledgePublic(KnowledgeSummary):
     content: str
+    related: list[KnowledgeRef]
 
 
 class TagCount(BaseModel):

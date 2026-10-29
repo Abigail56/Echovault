@@ -116,3 +116,18 @@ def test_validation_and_project_scope(user_client, other_client):
     assert user_client.post(f"{API}/ask", json={"question": "hi"}).status_code == 422
     foreign = other_client.post("/api/v1/projects", json={"name": "X"}).json()
     assert user_client.post(f"{API}/ask", json={"question": "anything here", "project_id": foreign["id"]}).status_code == 422
+
+
+def test_decisions_are_sources_and_archived_notes_are_not(user_client):
+    provider = use(FakeProvider(reply="Use Postgres [1]."))
+    decision = user_client.post(
+        "/api/v1/decisions", json={"title": "Database choice", "decision": "Use Postgres for queues", "reasoning": "fewer moving parts"}
+    ).json()
+    old = add_note(user_client, "Old queue notes", "We used to prefer RabbitMQ queues")
+    user_client.patch(f"/api/v1/knowledge/{old['id']}", json={"archived": True})
+
+    body = user_client.post(f"{API}/ask", json={"question": "which queues should we use?"}).json()
+    assert [(s["type"], s["id"]) for s in body["sources"]] == [("decision", decision["id"])]
+    _, sent = provider.calls[0]
+    assert 'kind="decision"' in sent and "Selected option: Use Postgres" in sent
+    assert "RabbitMQ" not in sent

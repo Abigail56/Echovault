@@ -7,11 +7,15 @@ test("register through the form and land on the dashboard", async ({ page }) => 
   await page.getByLabel("Full name").fill("Grace Hopper");
   await page.getByLabel("Email").fill(uniqueEmail("register"));
   await page.getByLabel("Password").fill("short");
-  await page.getByRole("button", { name: "Create account" }).click();
+  const terms = page.getByRole("checkbox", { name: /I agree to the Terms and Conditions/ });
+  await expect(terms).not.toBeChecked(); // consent starts unticked
+  await page.getByRole("button", { name: "Create your vault" }).click();
   await expect(page.getByText("Use at least 10 characters")).toBeVisible();
+  await expect(page.getByText("You need to accept the Terms and Conditions")).toBeVisible();
 
   await page.getByLabel("Password").fill(PASSWORD);
-  await page.getByRole("button", { name: "Create account" }).click();
+  await terms.check();
+  await page.getByRole("button", { name: "Create your vault" }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByRole("heading", { name: /, Grace$/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Getting started" })).toBeVisible();
@@ -34,7 +38,7 @@ test("protected pages redirect to sign-in and return afterwards", async ({ page,
   await anonPage.getByLabel("Password").fill(PASSWORD);
   await anonPage.getByRole("button", { name: "Sign in" }).click();
   await expect(anonPage).toHaveURL(/\/vault$/);
-  await expect(anonPage.getByRole("heading", { name: "Knowledge Vault" })).toBeVisible();
+  await expect(anonPage.getByRole("heading", { name: "Vault", exact: true })).toBeVisible();
   await anonymous.close();
 });
 

@@ -1,10 +1,11 @@
 import uuid
+from datetime import UTC, datetime
 from typing import Literal
 
 from sqlalchemy import func
 from sqlmodel import Session, col, select
 
-from app.models import Decision
+from app.models import Decision, DecisionStatus
 from app.schemas.decision import DecisionCreate, DecisionPublic, DecisionSummary, DecisionUpdate
 from app.services.errors import NotFoundError
 from app.services.project_service import project_refs, require_project_link
@@ -18,7 +19,14 @@ from app.services.search_vectors import (
 
 DecisionSort = Literal["updated_at", "created_at", "title"]
 
-_TEXT_FIELDS = ("context", "decision", "reasoning", "alternatives", "expected_outcome", "actual_outcome")
+_TEXT_FIELDS = ("context", "problem", "decision", "reasoning", "alternatives", "expected_outcome", "actual_outcome")
+
+
+def _mark_reviewed_if_needed(decision: Decision, changes: dict) -> None:
+    """Record the review date when review notes are written or status becomes "reviewed"."""
+    wrote_review = bool((changes.get("actual_outcome") or "").strip())
+    if wrote_review or changes.get("status") == DecisionStatus.REVIEWED:
+        decision.reviewed_at = datetime.now(UTC)
 
 
 def _get_owned(db: Session, owner_id: uuid.UUID, decision_id: uuid.UUID) -> Decision:
@@ -44,7 +52,9 @@ def _serialise(items: list[Decision], db: Session, owner_id: uuid.UUID, terms: l
             "title": d.title,
             "excerpt": make_excerpt(_excerpt_source(d), terms),
             "project": refs.get(d.project_id) if d.project_id else None,
+            "status": DecisionStatus(d.status),
             "has_outcome": bool(d.actual_outcome.strip()),
+            "reviewed_at": d.reviewed_at,
             "created_at": d.created_at,
             "updated_at": d.updated_at,
         }
@@ -61,6 +71,7 @@ def list_decisions(
     *,
     q: str | None,
     project_id: uuid.UUID | None,
+    status: DecisionStatus | None = None,
     sort: DecisionSort,
     order: Literal["asc", "desc"],
     limit: int,
@@ -69,6 +80,8 @@ def list_decisions(
     filters = [Decision.owner_id == owner_id]
     if project_id is not None:
         filters.append(Decision.project_id == project_id)
+    if status is not None:
+        filters.append(Decision.status == status)
     terms: list[str] = []
     if q and q.strip():
         terms = query_terms(q)
@@ -90,6 +103,7 @@ def get_decision(db: Session, owner_id: uuid.UUID, decision_id: uuid.UUID) -> De
 def create_decision(db: Session, owner_id: uuid.UUID, data: DecisionCreate) -> DecisionPublic:
     require_project_link(db, owner_id, data.project_id)
     decision = Decision(owner_id=owner_id, **data.model_dump())
+    _mark_reviewed_if_needed(decision, data.model_dump())
     db.add(decision)
     db.commit()
     return get_decision(db, owner_id, decision.id)
@@ -100,6 +114,9 @@ def update_decision(
 ) -> DecisionPublic:
     decision = _get_owned(db, owner_id, decision_id)
     changes = data.model_dump(exclude_unset=True)
+    if "actual_outcome" in changes and changes["actual_outcome"] == decision.actual_outcome:
+        changes.pop("actual_outcome")  # unchanged review text is not a new review
+    _mark_reviewed_if_needed(decision, changes)
     if "project_id" in changes:
         require_project_link(db, owner_id, changes["project_id"])
         decision.project_id = changes.pop("project_id")

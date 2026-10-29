@@ -21,10 +21,19 @@ Password = Annotated[str, Field(min_length=10, max_length=128), AfterValidator(_
 FullName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
 
 
+def _must_accept(value: bool) -> bool:
+    if value is not True:
+        raise ValueError("You must accept the Terms and Conditions to create an account")
+    return value
+
+
 class RegisterRequest(BaseModel):
     email: NormalisedEmail
     password: Password
     full_name: FullName
+    # The checkbox on the sign-up form, and which version of the Terms it showed.
+    accept_terms: Annotated[bool, AfterValidator(_must_accept)]
+    terms_version: str = Field(min_length=1, max_length=32)
 
 
 class LoginRequest(BaseModel):
@@ -41,6 +50,8 @@ class UserPublic(BaseModel):
     email: str
     full_name: str
     created_at: datetime
+    terms_version: str | None
+    terms_accepted_at: datetime | None
 
 
 class ProfileUpdate(BaseModel):
@@ -63,3 +74,17 @@ class PasswordResetConfirm(BaseModel):
 
 class AuthConfig(BaseModel):
     password_reset_available: bool
+    terms_version: str
+
+
+class ChangeEmailRequest(BaseModel):
+    new_email: NormalisedEmail
+    password: str = Field(min_length=1, max_length=256)
+
+
+class AcceptTermsRequest(BaseModel):
+    terms_version: str = Field(min_length=1, max_length=32)
+
+
+class DeleteAccountRequest(BaseModel):
+    password: str = Field(min_length=1, max_length=256)

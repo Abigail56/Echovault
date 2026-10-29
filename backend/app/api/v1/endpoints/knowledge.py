@@ -24,13 +24,14 @@ def list_knowledge(
     q: Annotated[str | None, Query(max_length=200)] = None,
     tag: Annotated[str | None, Query(max_length=50)] = None,
     project_id: uuid.UUID | None = None,
+    archived: bool = False,
     sort: knowledge_service.KnowledgeSort = "updated_at",
     order: Literal["asc", "desc"] = "desc",
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> Page[KnowledgeSummary]:
     items, total = knowledge_service.list_knowledge(
-        db, owner_id, q=q, tag=tag, project_id=project_id, sort=sort, order=order, limit=limit, offset=offset
+        db, owner_id, q=q, tag=tag, project_id=project_id, archived=archived, sort=sort, order=order, limit=limit, offset=offset
     )
     return Page(items=items, total=total, limit=limit, offset=offset)
 

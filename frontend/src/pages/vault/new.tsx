@@ -22,7 +22,7 @@ const NewKnowledgePage: PageWithLayout = () => {
       <Head>
         <title>New knowledge · EchoVault Nexus</title>
       </Head>
-      <PageHeader title="Capture knowledge" breadcrumbs={[{ label: "Knowledge Vault", href: "/vault" }, { label: "New item" }]} />
+      <PageHeader title="Capture knowledge" breadcrumbs={[{ label: "Vault", href: "/vault" }, { label: "New item" }]} />
       <div className="surface p-5 sm:p-6">
         <KnowledgeForm
           submitLabel="Save to vault"
