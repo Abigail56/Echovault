@@ -23,11 +23,11 @@ function Stat({ label, value, href, icon: Icon, note }: { label: string; value: 
   const shown = useCountUp(value);
   return (
     <Link href={href} className="surface lift hover:border-primary/40 group flex items-center gap-4 p-4">
-      <span className="bg-primary/10 text-primary grid size-10 shrink-0 place-items-center rounded-field">
+      <span className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-content grid size-11 shrink-0 place-items-center rounded-field transition-colors duration-300">
         <Icon className="size-5" aria-hidden />
       </span>
       <span className="min-w-0">
-        <span className="block text-2xl leading-tight font-semibold tabular-nums">
+        <span className="block text-3xl leading-tight font-bold tracking-tight tabular-nums">
           {shown === undefined ? <span className="skeleton inline-block h-6 w-8 align-middle" /> : shown}
         </span>
         <span className="text-meta block truncate">

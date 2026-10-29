@@ -119,21 +119,21 @@
   /* Typography scale used across the app (fluid between phone and desktop). */
   .text-display {
     /* Landing hero: ~40px on phones up to 68px on large screens. */
-    font-size: clamp(2.5rem, 1.6rem + 3.6vw, 4.25rem);
-    line-height: 1.05;
-    letter-spacing: -0.035em;
-    font-weight: 650;
+    font-size: clamp(2.5rem, 1.5rem + 3.6vw, 4.25rem); /* max 68px */
+    line-height: 1.02;
+    letter-spacing: -0.045em;
+    font-weight: 750;
   }
   .text-headline {
     /* Landing section headings: 30px to 42px. */
-    font-size: clamp(1.875rem, 1.4rem + 1.6vw, 2.625rem);
-    line-height: 1.15;
-    letter-spacing: -0.025em;
-    font-weight: 620;
+    font-size: clamp(1.95rem, 1.4rem + 1.9vw, 2.875rem);
+    line-height: 1.1;
+    letter-spacing: -0.035em;
+    font-weight: 720;
   }
   .text-page-title {
     /* Workspace page headings: 26px to 30px. */
-    @apply text-[1.625rem] leading-tight font-semibold tracking-tight sm:text-[1.875rem];
+    @apply text-[1.75rem] leading-tight font-bold tracking-[-0.03em] sm:text-[2rem];
   }
   .text-section {
     @apply text-[1.0625rem] leading-snug font-semibold;
@@ -142,7 +142,7 @@
     @apply text-[0.8125rem] text-subtle;
   }
   .eyebrow {
-    @apply text-primary text-[0.8125rem] font-medium tracking-wide uppercase;
+    @apply text-primary text-[0.75rem] font-semibold tracking-[0.12em] uppercase;
   }
   .surface {
     @apply rounded-box border border-base-300 bg-base-100;
@@ -194,6 +194,44 @@
     transform: none;
     opacity: 1;
   }
+}
+
+@keyframes ev-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes ev-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes ev-grow-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+/* SVG lines that draw themselves: set --len (path length) and --delay. */
+.draw-line {
+  stroke-dasharray: var(--len, 400);
+  stroke-dashoffset: var(--len, 400);
+  animation: ev-draw 0.9s var(--ease-out-soft) var(--delay, 0s) forwards;
+}
+/* SVG nodes that pop in after their line arrives. */
+.pop-in {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ev-pop 0.5s var(--ease-spring) var(--delay, 0s) both;
+}
+/* Connector lines (borders) that grow into place. */
+.grow-x {
+  transform-origin: center;
+  animation: ev-grow-x 0.55s var(--ease-out-soft) var(--delay, 0s) both;
+}
+.grow-y {
+  transform-origin: top;
+  animation: ev-grow-y 0.35s var(--ease-out-soft) var(--delay, 0s) both;
 }
 
 /* A page's content entering after navigation. */
@@ -312,6 +350,9 @@ dialog[open] .slide-in-left {
   .reveal {
     opacity: 1;
     transform: none;
+  }
+  .draw-line {
+    stroke-dashoffset: 0;
   }
   .lift:hover,
   .btn:active:not(:disabled) {
