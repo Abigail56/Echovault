@@ -48,6 +48,15 @@ export default function PrivacyPage() {
               <td>To provide the service you asked for.</td>
             </tr>
             <tr>
+              <td>Uploaded files</td>
+              <td>
+                Files and screenshots you attach to notes, their name, type, size and a checksum, and the text read from them. Text is
+                read on our own server (with the open-source Tesseract OCR engine for images); files are not sent to any third party to
+                do this.
+              </td>
+              <td>To store your files and make the text inside them searchable.</td>
+            </tr>
+            <tr>
               <td>Session records</td>
               <td>Session identifiers, a hashed refresh token, your browser&apos;s user-agent string and session start/expiry times.</td>
               <td>To keep you signed in securely and let you sign out of every device.</td>
@@ -84,10 +93,14 @@ export default function PrivacyPage() {
         <h2 id="ai">4. The AI assistant and your data</h2>
         <p>The assistant is optional and only works if the operator has configured an AI provider. When you ask it a question:</p>
         <ul>
-          <li>We search <strong>only your own</strong> notes and decisions for matching records. Archived notes are excluded.</li>
+          <li>
+            We search <strong>only your own</strong> notes and decisions (including text read from files attached to those notes) for
+            matching records. Archived notes are excluded.
+          </li>
           <li>
             Your question and the most relevant matches (by default up to 6, each trimmed to a few thousand characters) are sent to the
-            configured provider to generate the answer. Nothing else from your account is sent.
+            configured provider to generate the answer. Files themselves are never sent, only their extracted text when it matches.
+            Nothing else from your account is sent.
           </li>
           <li>If nothing in your vault matches, no request is sent to the provider at all.</li>
           <li>
@@ -108,13 +121,14 @@ export default function PrivacyPage() {
 
         <h2 id="storage">6. Storage, security and retention</h2>
         <p>
-          Data is stored in a PostgreSQL database hosted in [hosting region]. Passwords are hashed with Argon2; sessions use HttpOnly
+          Data is stored in a PostgreSQL database hosted in [hosting region]; uploaded files are stored on the server&apos;s private disk
+          under random names and are only served to the account that uploaded them. Passwords are hashed with Argon2; sessions use HttpOnly
           cookies with CSRF protection and can be revoked; every request is checked so that one account can never read another
           account&apos;s records. In production the service must be served over HTTPS.
         </p>
         <p>
-          We keep your data until you delete it or delete your account. Deleting your account removes your account and all its content
-          from the live database immediately. Backups are kept for [backup retention period] and then deleted. Expired sessions and reset
+          We keep your data until you delete it or delete your account. Deleting your account removes your account and all its content,
+          including uploaded files, from the live system immediately. Deleting a note or an attachment removes its files too. Backups are kept for [backup retention period] and then deleted. Expired sessions and reset
           tokens are kept for [retention period] for security purposes.
         </p>
 

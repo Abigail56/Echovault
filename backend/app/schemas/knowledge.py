@@ -4,6 +4,7 @@ from typing import Annotated
 
 from pydantic import AfterValidator, BaseModel, Field, StringConstraints
 
+from app.schemas.attachment import AttachmentPublic
 from app.schemas.common import LongText, Title
 from app.schemas.project import ProjectRef
 
@@ -54,6 +55,7 @@ class KnowledgeSummary(BaseModel):
     tags: list[str]
     project: ProjectRef | None
     archived_at: datetime | None
+    attachment_count: int = 0
     created_at: datetime
     updated_at: datetime
 
@@ -61,6 +63,7 @@ class KnowledgeSummary(BaseModel):
 class KnowledgePublic(KnowledgeSummary):
     content: str
     related: list[KnowledgeRef]
+    attachments: list[AttachmentPublic] = []
 
 
 class TagCount(BaseModel):

@@ -1,11 +1,15 @@
 """Importing this package registers every table with SQLModel.metadata."""
 
+from app.models.attachment import Attachment, ExtractionStatus, FileKind
 from app.models.decision import Decision, DecisionStatus
 from app.models.knowledge import KnowledgeItem, KnowledgeLink, KnowledgeTag, Tag
 from app.models.project import Project, ProjectStatus
 from app.models.user import PasswordResetToken, User, UserSession
 
 __all__ = [
+    "Attachment",
+    "ExtractionStatus",
+    "FileKind",
     "Decision",
     "DecisionStatus",
     "KnowledgeItem",

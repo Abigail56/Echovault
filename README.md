@@ -9,6 +9,7 @@ A personal knowledge and project-intelligence workspace. Capture notes, group th
 | **Accounts** | Register (with Terms acceptance), sign in, sign out, sign out of all devices, profile editing, email change (password-confirmed), password change, JSON data export, re-acceptance of updated Terms, self-service account deletion (password + typed confirmation; deletes all data). Argon2 password hashing. HttpOnly cookie sessions with refresh-token rotation, server-side revocation and CSRF protection. Rate-limited auth endpoints. |
 | **Password reset** | Full email flow (single-use, expiring, hashed tokens; no account enumeration), verified end to end with real SMTP delivery to a local Mailpit inbox. Needs SMTP settings; without them, the UI says it isn't configured. |
 | **Knowledge Vault** | Create, read, update, delete, archive/restore. Markdown editor with preview (rendered safely, no raw HTML). Tags, project links, two-way related-note links, a connection map of each note's project, decisions and related notes, keyword search, tag/project filters, sorting, pagination, save status and unsaved-changes warning. |
+| **Attachments** | Attach images, screenshots, PDFs and text/Markdown/CSV files to any note: drag and drop, file picker, or paste a screenshot with Ctrl+V. Text is extracted on the server (Tesseract OCR for images and scanned PDFs, the text layer for normal PDFs) and becomes searchable in Search, the Vault filter and the assistant. View, copy, or add the extracted text to the note; download, retry or delete files. "Import files" on the Vault turns each file into its own note. File type is checked from the bytes (SVG/HTML refused), with per-file size, per-note and per-user storage limits. |
 | **Projects** | CRUD, statuses (active / on hold / completed / archived), linked knowledge and decisions, counts. Deleting a project keeps its notes and decisions. |
 | **Decision Journal** | Context, problem statement, alternatives, selected option, reasoning, expected and actual outcome. Status (proposed / accepted / superseded / reviewed) and last-review date. Project links, search, status/project filters. |
 | **Global search** | PostgreSQL full-text keyword search (prefix matching, stemming, ranking) across notes (including archived, labelled), tags, projects and decisions. Grouped by type with counts, type filters, pagination and highlighted excerpts. This is **keyword** search, not semantic search. |
@@ -64,6 +65,7 @@ Echovault/
 - Python 3.12+ (developed on 3.14)
 - Node.js 22+
 - Docker with Docker Compose
+- Optional, for reading text from screenshots: Tesseract OCR (`sudo apt install tesseract-ocr`; macOS `brew install tesseract`). Without it, images are still stored and the app shows "OCR not installed". `pdftoppm` (poppler-utils) is needed only to OCR scanned PDFs.
 
 ## Quick start (after setup)
 
@@ -209,7 +211,8 @@ Why not tokens in `localStorage`? Any script injected into the page could read t
 - Login errors are generic ("Invalid email or password"), and timing is equalised for unknown emails.
 - Ownership is enforced in **every** query. Other users' records return **404**, so IDs can't be probed. UUID primary keys.
 - Rate limits: login (8 per email / 30 per IP per 15 min), registration, refresh, password reset, assistant (20 per user per 5 min). The limiter is in-memory, so it's per process (see Limitations).
-- Request bodies over 1 MB are rejected. Security headers are set by both FastAPI and Next.js.
+- Uploads: the type is detected from the file's bytes (SVG, HTML and unknown types are refused), images are verified and limited in pixel count, files are stored outside any web folder under random names, served only to their owner with `nosniff` and a sandboxing CSP, and only images are shown inline (everything else downloads). Size, per-note and per-user quota limits are enforced while streaming.
+- Request bodies over 1 MB are rejected (uploads: the configured file limit). Security headers are set by both FastAPI and Next.js.
 - Markdown is rendered without raw HTML; search highlighting never injects HTML.
 - Internal errors return a generic message; details go only to the server log.
 - `backend/.env` and `frontend/.env*` are git-ignored; only `.env.example` files with placeholders are committed.
@@ -288,8 +291,9 @@ The backend rejects sign-ups that accepted an older version, asking the user to 
 - Email changes take effect immediately after re-entering the password (the old address is notified when SMTP is configured); the new address is not verified by a confirmation link.
 - The updated-Terms prompt is enforced in the web app; the API itself does not block requests from users who haven't re-accepted.
 - **Legal pages are drafts.** They describe how the software actually works, but every `[bracketed]` item (operator name, address, contact emails, AI/email/hosting providers, retention periods, jurisdiction, minimum age, liability cap) must be filled in, and the text reviewed by a lawyer, before a public launch.
-- No file uploads, imports/exports, knowledge graph, or team collaboration.
-- End-to-end tests cover the main journeys in Chromium only (not Firefox/Safari), and don't exercise the AI assistant with a real provider or password-reset emails.
+- Attachments are stored on the server's local disk (`backend/storage/attachments`, or `ATTACHMENTS_DIR`); use a persistent volume in production. OCR is English by default (`OCR_LANGUAGES`), runs one file at a time inside the API process, and handwriting is read poorly. The data export includes each file's details and extracted text, not the files themselves.
+- No knowledge graph or team collaboration.
+- End-to-end tests cover the main journeys in Chromium only (not Firefox/Safari), and don't exercise the AI assistant with a real provider.
 
 ## Deployment guide (not yet deployed)
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
 
+import { AttachmentPanel } from "@/components/attachments/AttachmentPanel";
 import { KnowledgeForm } from "@/components/knowledge/KnowledgeForm";
 import { appLayout } from "@/components/layout/AppShell";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -56,6 +57,18 @@ const KnowledgeDetailPage: PageWithLayout = () => {
       toast.error(errorMessage(error));
     } finally {
       setArchiving(false);
+    }
+  };
+
+  // Appends text read from an attachment to the end of the note.
+  const addToNote = async (text: string, filename: string) => {
+    const current = item.data?.content.trimEnd() ?? "";
+    const block = `### From ${filename}\n\n${text.trim()}`;
+    try {
+      item.setData(await knowledgeApi.update(id, { content: current ? `${current}\n\n${block}` : block }));
+      toast.success("Text added to the note");
+    } catch (error) {
+      toast.error(errorMessage(error));
     }
   };
 
@@ -199,6 +212,8 @@ const KnowledgeDetailPage: PageWithLayout = () => {
             </aside>
           </div>
 
+          <AttachmentPanel key={k.id} noteId={k.id} initial={k.attachments} onAddToNote={addToNote} />
+
           <section className="mt-6" aria-labelledby="connections-heading">
             <h2 id="connections-heading" className="text-section mb-3">
               Connections
@@ -233,7 +248,7 @@ const KnowledgeDetailPage: PageWithLayout = () => {
       <ConfirmDialog
         open={confirming}
         title="Delete this note?"
-        description={`"${k.title}" will be permanently deleted. Consider archiving instead if you might need it later. This cannot be undone.`}
+        description={`"${k.title}"${k.attachments.length ? ` and its ${k.attachments.length} attached file(s)` : ""} will be permanently deleted. Consider archiving instead if you might need it later. This cannot be undone.`}
         busy={deleting}
         onCancel={() => setConfirming(false)}
         onConfirm={remove}

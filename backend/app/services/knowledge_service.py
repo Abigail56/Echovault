@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import Session, col, select
 
 from app.models import KnowledgeItem, KnowledgeLink, KnowledgeTag, Tag
+from app.schemas.attachment import AttachmentPublic
 from app.schemas.knowledge import (
     KnowledgeCreate,
     KnowledgePublic,
@@ -16,6 +17,7 @@ from app.schemas.knowledge import (
     KnowledgeUpdate,
     TagCount,
 )
+from app.services import attachment_service
 from app.services.errors import InvalidInputError, NotFoundError
 from app.services.project_service import project_refs, require_project_link
 from app.services.search_vectors import (
@@ -90,6 +92,7 @@ def _get_owned(db: Session, owner_id: uuid.UUID, item_id: uuid.UUID) -> Knowledg
 
 def _serialise(items: list[KnowledgeItem], db: Session, owner_id: uuid.UUID, terms: list[str], full: bool):
     refs = project_refs(db, owner_id, {i.project_id for i in items})
+    files = attachment_service.list_for_notes(db, owner_id, [i.id for i in items])
     out: list[KnowledgeSummary] = []
     for item in items:
         data = {
@@ -99,11 +102,19 @@ def _serialise(items: list[KnowledgeItem], db: Session, owner_id: uuid.UUID, ter
             "tags": sorted(t.name for t in item.tags),
             "project": refs.get(item.project_id) if item.project_id else None,
             "archived_at": item.archived_at,
+            "attachment_count": len(files.get(item.id, [])),
             "created_at": item.created_at,
             "updated_at": item.updated_at,
         }
         if full:
-            out.append(KnowledgePublic(**data, content=item.content, related=_related(db, item.id)))
+            out.append(
+                KnowledgePublic(
+                    **data,
+                    content=item.content,
+                    related=_related(db, item.id),
+                    attachments=[AttachmentPublic.from_row(a) for a in files.get(item.id, [])],
+                )
+            )
         else:
             out.append(KnowledgeSummary(**data))
     return out
@@ -138,7 +149,11 @@ def list_knowledge(
     terms: list[str] = []
     if q and q.strip():
         terms = query_terms(q)
-        filters.append(text_match(knowledge_vector(), build_tsquery(q), KnowledgeItem.title, q))
+        tsq = build_tsquery(q)
+        match = text_match(knowledge_vector(), tsq, KnowledgeItem.title, q)
+        if tsq is not None:
+            match = or_(match, col(KnowledgeItem.id).in_(attachment_service.notes_matching(owner_id, tsq)))
+        filters.append(match)
 
     total = db.exec(select(func.count()).select_from(KnowledgeItem).where(*filters)).one()
     sort_col = col(getattr(KnowledgeItem, sort))
@@ -197,8 +212,10 @@ def update_knowledge(
 
 def delete_knowledge(db: Session, owner_id: uuid.UUID, item_id: uuid.UUID) -> None:
     item = _get_owned(db, owner_id, item_id)
+    keys = attachment_service.storage_keys_for_note(db, item.id)
     db.delete(item)
     db.commit()
+    attachment_service.remove_files(keys)
 
 
 def list_tags(db: Session, owner_id: uuid.UUID) -> list[TagCount]:

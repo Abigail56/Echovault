@@ -37,7 +37,10 @@ async def limit_body_and_add_headers(request: Request, call_next):
     length = request.headers.get("content-length")
     if length is not None:
         try:
-            too_large = int(length) > settings.MAX_REQUEST_BYTES
+            # File uploads get a bigger allowance; the upload code enforces the exact limit.
+            is_upload = request.method == "POST" and request.url.path.endswith("/attachments")
+            limit = settings.MAX_UPLOAD_BYTES + 100_000 if is_upload else settings.MAX_REQUEST_BYTES
+            too_large = int(length) > limit
         except ValueError:
             return JSONResponse({"detail": "Invalid Content-Length"}, status_code=400)
         if too_large:

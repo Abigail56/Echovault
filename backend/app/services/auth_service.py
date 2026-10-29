@@ -26,6 +26,7 @@ from app.core.security import (
 )
 from app.core.legal import CURRENT_TERMS_VERSION
 from app.models import PasswordResetToken, User, UserSession
+from app.services import attachment_service
 from app.services.errors import ConflictError, InvalidInputError
 
 # Two tabs refreshing at the same moment both present the same old token.
@@ -195,8 +196,11 @@ def delete_account(db: Session, user: User, password: str) -> None:
     """Permanently delete the user and (via ON DELETE CASCADE) all their data."""
     if not verify_password(password, user.password_hash):
         raise InvalidInputError("Password is incorrect")
+    keys = attachment_service.storage_keys_for_user(db, user.id)
     db.delete(user)
     db.commit()
+    # Rows are gone via ON DELETE CASCADE; the files on disk are removed here.
+    attachment_service.remove_files(keys)
 
 
 def create_password_reset(db: Session, email: str) -> tuple[User, str] | None:

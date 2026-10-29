@@ -1,4 +1,4 @@
-import { FolderKanban } from "lucide-react";
+import { FolderKanban, Paperclip } from "lucide-react";
 import Link from "next/link";
 
 import type { KnowledgeSummary } from "@/lib/api/types";
@@ -22,6 +22,13 @@ export function KnowledgeCard({ item }: { item: KnowledgeSummary }) {
           Updated {timeAgo(item.updated_at)}
         </time>
         {item.archived_at && <span className="badge badge-ghost badge-sm">Archived</span>}
+        {item.attachment_count > 0 && (
+          <span className="flex items-center gap-1" title={`${item.attachment_count} attached file(s)`}>
+            <Paperclip className="size-3.5" aria-hidden />
+            <span className="tabular-nums">{item.attachment_count}</span>
+            <span className="sr-only">attachments</span>
+          </span>
+        )}
         {item.project && (
           <span className="flex min-w-0 items-center gap-1">
             <FolderKanban className="size-3.5 shrink-0" aria-hidden />

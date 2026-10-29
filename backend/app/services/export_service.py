@@ -12,9 +12,9 @@ from sqlalchemy import or_
 from sqlalchemy.orm import selectinload
 from sqlmodel import Session, col, select
 
-from app.models import Decision, KnowledgeItem, KnowledgeLink, Project, User
+from app.models import Attachment, Decision, KnowledgeItem, KnowledgeLink, Project, User
 
-EXPORT_FORMAT_VERSION = 1
+EXPORT_FORMAT_VERSION = 2
 
 
 def _iso(value: datetime | None) -> str | None:
@@ -31,6 +31,10 @@ def build_export(db: Session, user: User) -> dict[str, Any]:
         .order_by(col(KnowledgeItem.created_at))
     ).all()
     decisions = db.exec(select(Decision).where(Decision.owner_id == owner_id).order_by(col(Decision.created_at))).all()
+
+    attachments = db.exec(
+        select(Attachment).where(Attachment.owner_id == owner_id).order_by(col(Attachment.created_at))
+    ).all()
 
     note_ids = [n.id for n in notes]
     related: dict[uuid.UUID, list[str]] = {nid: [] for nid in note_ids}
@@ -100,5 +104,20 @@ def build_export(db: Session, user: User) -> dict[str, Any]:
                 "updated_at": _iso(d.updated_at),
             }
             for d in decisions
+        ],
+        # File contents are not embedded; the extracted text and file details are.
+        "attachments": [
+            {
+                "id": str(a.id),
+                "note_id": str(a.knowledge_item_id),
+                "filename": a.filename,
+                "content_type": a.content_type,
+                "size_bytes": a.size_bytes,
+                "sha256": a.sha256,
+                "extraction_status": str(a.extraction_status),
+                "extracted_text": a.extracted_text,
+                "created_at": _iso(a.created_at),
+            }
+            for a in attachments
         ],
     }

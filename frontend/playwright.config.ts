@@ -7,6 +7,7 @@
  *   npm run test:e2e -- --ui    # interactive mode (great for debugging)
  */
 import { existsSync, readFileSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
 import { defineConfig, devices } from "@playwright/test";
@@ -70,6 +71,8 @@ export default defineConfig({
         SMTP_PORT: process.env.E2E_SMTP_PORT ?? "1025",
         SMTP_FROM: "noreply@echovault.test",
         SMTP_STARTTLS: "false",
+        // Uploaded files go to a throwaway folder, never the dev storage folder.
+        ATTACHMENTS_DIR: path.join(os.tmpdir(), "echovault-e2e-attachments"),
       },
     },
     {

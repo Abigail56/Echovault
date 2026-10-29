@@ -17,12 +17,13 @@ import uuid
 from dataclasses import dataclass
 from typing import Literal
 
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlmodel import Session, col, select
 
 from app.ai.providers import AIProvider, ProviderError
 from app.models import Decision, KnowledgeItem
 from app.schemas.assistant import AssistantAnswer, AssistantSource
+from app.services import attachment_service
 from app.services.errors import ServiceUnavailableError
 from app.services.project_service import require_project_link
 from app.services.search_vectors import build_tsquery, decision_vector, knowledge_vector, make_excerpt, query_terms
@@ -76,6 +77,14 @@ def _decision_text(d: Decision) -> str:
     return "\n".join(f"{label}: {text}" for label, text in sections if text.strip()) + f"\nStatus: {d.status}"
 
 
+def _note_text(note: KnowledgeItem, files: list[tuple[str, str]]) -> str:
+    """The note's own text followed by the text extracted from its attachments."""
+    parts = [note.content]
+    for filename, text in files:
+        parts.append(f"\n[Attached file: {filename}]\n{text}")
+    return "\n".join(p for p in parts if p.strip())
+
+
 def retrieve_sources(
     db: Session, owner_id: uuid.UUID, question: str, project_id: uuid.UUID | None, limit: int
 ) -> list[RetrievedSource]:
@@ -85,7 +94,12 @@ def retrieve_sources(
         return []
 
     kv = knowledge_vector()
-    k_filters = [KnowledgeItem.owner_id == owner_id, col(KnowledgeItem.archived_at).is_(None), kv.op("@@")(tsq)]
+    in_files = col(KnowledgeItem.id).in_(attachment_service.notes_matching(owner_id, tsq))
+    k_filters = [
+        KnowledgeItem.owner_id == owner_id,
+        col(KnowledgeItem.archived_at).is_(None),
+        or_(kv.op("@@")(tsq), in_files),
+    ]
     dv = decision_vector()
     d_filters = [Decision.owner_id == owner_id, dv.op("@@")(tsq)]
     if project_id is not None:
@@ -99,7 +113,12 @@ def retrieve_sources(
         select(Decision, func.ts_rank(dv, tsq)).where(*d_filters).order_by(func.ts_rank(dv, tsq).desc()).limit(limit)
     ).all()
 
-    merged = [RetrievedSource("knowledge", n.id, n.title, n.content, float(r)) for n, r in notes]
+    files = attachment_service.texts_for_notes(db, owner_id, [n.id for n, _ in notes])
+    merged = [
+        # A note matched only through its attachment ranks 0 on its own text; give it a small floor.
+        RetrievedSource("knowledge", n.id, n.title, _note_text(n, files.get(n.id, [])), max(float(r), 0.01))
+        for n, r in notes
+    ]
     merged += [RetrievedSource("decision", d.id, d.title, _decision_text(d), float(r)) for d, r in decisions]
     merged.sort(key=lambda s: s.rank, reverse=True)
     return merged[:limit]
