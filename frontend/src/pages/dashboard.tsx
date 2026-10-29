@@ -19,11 +19,32 @@ function greeting() {
   return hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 }
 
-function Stat({ label, value, href, icon: Icon, note }: { label: string; value: number | undefined; href: string; icon: typeof BookOpen; note?: string }) {
+// Each stat gets its own colour so the three tiles are easy to tell apart.
+const TONES = {
+  primary: "bg-primary/12 text-primary group-hover:bg-primary group-hover:text-primary-content",
+  accent: "bg-accent/12 text-accent group-hover:bg-accent group-hover:text-accent-content",
+  warning: "bg-warning/12 text-warning group-hover:bg-warning group-hover:text-warning-content",
+} as const;
+
+function Stat({
+  label,
+  value,
+  href,
+  icon: Icon,
+  note,
+  tone = "primary",
+}: {
+  label: string;
+  value: number | undefined;
+  href: string;
+  icon: typeof BookOpen;
+  note?: string;
+  tone?: keyof typeof TONES;
+}) {
   const shown = useCountUp(value);
   return (
     <Link href={href} className="surface lift hover:border-primary/40 group flex items-center gap-4 p-4">
-      <span className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-content grid size-11 shrink-0 place-items-center rounded-field transition-colors duration-300">
+      <span className={`${TONES[tone]} grid size-11 shrink-0 place-items-center rounded-field transition-colors duration-300`}>
         <Icon className="size-5" aria-hidden />
       </span>
       <span className="min-w-0">
@@ -165,8 +186,8 @@ const Overview: PageWithLayout = () => {
             icon={BookOpen}
             note={stats.data?.archived_knowledge_count ? `${stats.data.archived_knowledge_count} archived` : undefined}
           />
-          <Stat label="Active projects" value={stats.data?.active_project_count} href="/projects?status=active" icon={FolderKanban} note={stats.data ? `${stats.data.project_count} total` : undefined} />
-          <Stat label="Decisions" value={stats.data?.decision_count} href="/decisions" icon={Scale} />
+          <Stat label="Active projects" value={stats.data?.active_project_count} href="/projects?status=active" icon={FolderKanban} note={stats.data ? `${stats.data.project_count} total` : undefined} tone="accent" />
+          <Stat label="Decisions" value={stats.data?.decision_count} href="/decisions" icon={Scale} tone="warning" />
         </div>
       )}
 

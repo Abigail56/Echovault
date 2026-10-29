@@ -26,7 +26,6 @@ import { ConnectionMap } from "@/components/ui/ConnectionMap";
 import { Reveal } from "@/components/ui/Reveal";
 import { useAuth } from "@/hooks/useAuth";
 
-const HEADLINE = "Your knowledge, connected to every decision.";
 const SUPPORT =
   "Capture what you learn, organise your projects, and preserve the reasoning behind your decisions. Find the right information when you need it, with an AI assistant that answers from your own knowledge and shows its sources.";
 
@@ -198,7 +197,9 @@ export default function Home() {
         <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-14 pb-20 sm:px-6 lg:grid-cols-[1.25fr_1fr] lg:pt-24 lg:pb-28">
           <div className="stagger">
             <p className="eyebrow">Personal knowledge &amp; project intelligence</p>
-            <h1 className="text-display mt-4">{HEADLINE}</h1>
+            <h1 className="text-display mt-4">
+              Your knowledge, <span className="text-gradient">connected to every decision.</span>
+            </h1>
             <p className="text-muted mt-6 max-w-xl text-[1.0625rem] leading-relaxed">{SUPPORT}</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href={primaryCta.href} className="btn btn-primary btn-lg nudge-icon grow font-semibold sm:grow-0">

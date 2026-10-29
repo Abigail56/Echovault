@@ -15,75 +15,83 @@
   name: "echovault-dark";
   default: true;
   color-scheme: dark;
-  --color-base-100: #151923; /* elevated surface: cards, inputs */
-  --color-base-200: #0b0d12; /* page background */
-  --color-base-300: #282e3b; /* borders */
-  --color-base-content: #f4f6fb;
-  --color-primary: #7c83ff;
-  --color-primary-content: #0b0d12;
-  --color-secondary: #55c5f2;
-  --color-secondary-content: #04202c;
-  --color-accent: #55c5f2;
-  --color-accent-content: #04202c;
-  --color-neutral: #1b202b;
-  --color-neutral-content: #f4f6fb;
-  --color-info: #55c5f2;
-  --color-info-content: #04202c;
-  --color-success: #4cc38a;
-  --color-success-content: #05210f;
-  --color-warning: #e2b04a;
-  --color-warning-content: #231803;
-  --color-error: #f0707b;
-  --color-error-content: #2a0a0e;
+  --color-base-100: #0f1629; /* elevated surface: cards, inputs */
+  --color-base-200: #070b16; /* page background (deep navy) */
+  --color-base-300: #1f2a44; /* borders */
+  --color-base-content: #e8edf7;
+  --color-primary: #5b8cff;
+  --color-primary-content: #050a1a;
+  --color-secondary: #2dd4bf;
+  --color-secondary-content: #032621;
+  --color-accent: #2dd4bf;
+  --color-accent-content: #032621;
+  --color-neutral: #162038;
+  --color-neutral-content: #e8edf7;
+  --color-info: #60a5fa;
+  --color-info-content: #04172f;
+  --color-success: #34d399;
+  --color-success-content: #032318;
+  --color-warning: #fbbf24;
+  --color-warning-content: #261a02;
+  --color-error: #f87171;
+  --color-error-content: #2b0707;
   --radius-selector: 0.5rem;
-  --radius-field: 0.5rem;
-  --radius-box: 0.75rem;
+  --radius-field: 0.625rem;
+  --radius-box: 1rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   --border: 1px;
-  --depth: 0;
+  --depth: 1;
   --noise: 0;
-  --ev-muted: #a0a8b8; /* secondary text */
-  --ev-subtle: #8a93a6; /* metadata (lightened from #737D90 to keep 4.5:1 contrast on surfaces) */
-  --ev-surface-sunken: #1b202b; /* secondary surface: code, previews */
-  --ev-sidebar: #10131a;
+  --ev-muted: #a3aec4; /* secondary text (8:1 on cards) */
+  --ev-subtle: #8b97b0; /* metadata (6:1 on cards) */
+  --ev-surface-sunken: #131c33; /* secondary surface: code, previews */
+  --ev-sidebar: #0a1020;
+  --ev-shadow: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+  --ev-shadow-hover: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 16px 36px -16px rgb(0 0 0 / 0.75);
+  --ev-backdrop: radial-gradient(1200px 520px at 15% -10%, rgb(91 140 255 / 0.10), transparent 60%),
+    radial-gradient(900px 480px at 100% 0%, rgb(45 212 191 / 0.06), transparent 55%);
 }
 
 @plugin "daisyui/theme" {
   name: "echovault";
   color-scheme: light;
   --color-base-100: #ffffff;
-  --color-base-200: #f6f7fb;
-  --color-base-300: #e2e6ef;
-  --color-base-content: #151a26;
-  --color-primary: #5157e0;
+  --color-base-200: #f4f6fb;
+  --color-base-300: #e2e8f0;
+  --color-base-content: #0f172a;
+  --color-primary: #2557e8;
   --color-primary-content: #ffffff;
-  --color-secondary: #1a8fc0;
+  --color-secondary: #0f766e;
   --color-secondary-content: #ffffff;
-  --color-accent: #1a8fc0;
+  --color-accent: #0f766e;
   --color-accent-content: #ffffff;
-  --color-neutral: #10131a;
-  --color-neutral-content: #f4f6fb;
-  --color-info: #1a8fc0;
+  --color-neutral: #0f172a;
+  --color-neutral-content: #f8fafc;
+  --color-info: #1d4ed8;
   --color-info-content: #ffffff;
-  --color-success: #16805f;
+  --color-success: #047857;
   --color-success-content: #ffffff;
-  --color-warning: #a8701a;
+  --color-warning: #b45309;
   --color-warning-content: #ffffff;
-  --color-error: #c43c48;
+  --color-error: #c81e1e;
   --color-error-content: #ffffff;
   --radius-selector: 0.5rem;
-  --radius-field: 0.5rem;
-  --radius-box: 0.75rem;
+  --radius-field: 0.625rem;
+  --radius-box: 1rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   --border: 1px;
-  --depth: 0;
+  --depth: 1;
   --noise: 0;
-  --ev-muted: #5a6478;
-  --ev-subtle: #667085;
-  --ev-surface-sunken: #f0f2f8;
+  --ev-muted: #475569;
+  --ev-subtle: #5b6678;
+  --ev-surface-sunken: #f1f5f9;
   --ev-sidebar: #ffffff;
+  --ev-shadow: 0 1px 2px rgb(15 23 42 / 0.05), 0 4px 16px -8px rgb(15 23 42 / 0.10);
+  --ev-shadow-hover: 0 2px 4px rgb(15 23 42 / 0.05), 0 16px 32px -14px rgb(15 23 42 / 0.20);
+  --ev-backdrop: radial-gradient(1200px 520px at 15% -10%, rgb(37 87 232 / 0.07), transparent 60%),
+    radial-gradient(900px 480px at 100% 0%, rgb(15 118 110 / 0.05), transparent 55%);
 }
 
 @theme inline {
@@ -101,6 +109,10 @@
   }
   body {
     @apply bg-base-200 text-base-content antialiased;
+    /* A soft, static wash of colour at the top of the page (no animation). */
+    background-image: var(--ev-backdrop);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     font-size: 15px;
     line-height: 1.6;
   }
@@ -146,6 +158,14 @@
   }
   .surface {
     @apply rounded-box border border-base-300 bg-base-100;
+    box-shadow: var(--ev-shadow);
+  }
+  /* Text with the brand gradient (headings on the landing page). */
+  .text-gradient {
+    background: linear-gradient(100deg, var(--color-primary), var(--color-accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 }
 
@@ -260,8 +280,8 @@
     border-color 0.2s;
 }
 .lift:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 24px -16px rgb(0 0 0 / 0.55);
+  transform: translateY(-2px);
+  box-shadow: var(--ev-shadow-hover);
 }
 
 /* Buttons give a small "press" when clicked. */
@@ -275,6 +295,22 @@
 }
 .btn:active:not(:disabled) {
   transform: scale(0.97);
+}
+/* Primary buttons: a subtle top-to-bottom sheen and a soft coloured shadow. */
+.btn-primary:not(.btn-soft):not(.btn-outline):not(.btn-ghost) {
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0));
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.15), 0 6px 16px -6px color-mix(in oklab, var(--color-primary) 60%, transparent);
+}
+.btn-primary:not(.btn-soft):not(.btn-outline):not(.btn-ghost):hover {
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.15), 0 10px 22px -8px color-mix(in oklab, var(--color-primary) 70%, transparent);
+}
+/* Inputs: a clear, standard focus ring. */
+.input:focus-within,
+.textarea:focus,
+.select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-primary) 25%, transparent);
+  outline: none;
 }
 
 /* Icons inside a hovered element nudge sideways (e.g. "View all →"). */
@@ -343,6 +379,7 @@ dialog[open] .slide-in-left {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
