@@ -24,7 +24,7 @@ for port in "$BACKEND_PORT" "$FRONTEND_PORT"; do
   fi
 done
 
-echo "→ Starting the database (Docker)…"
+echo "→ Starting the database and the local email inbox (Docker)…"
 (cd "$ROOT/backend" && docker compose up -d --wait >/dev/null) || fail "Could not start the database. Is Docker running?"
 
 echo "→ Applying database migrations…"
@@ -40,7 +40,8 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 echo "→ Starting the backend on http://127.0.0.1:$BACKEND_PORT …"
-(cd "$ROOT/backend" && exec "$PYTHON" -m uvicorn app.main:app --reload --host 127.0.0.1 --port "$BACKEND_PORT") &
+# FRONTEND_ORIGIN makes links in emails (e.g. password reset) point at this frontend.
+(cd "$ROOT/backend" && FRONTEND_ORIGIN="http://localhost:$FRONTEND_PORT" exec "$PYTHON" -m uvicorn app.main:app --reload --host 127.0.0.1 --port "$BACKEND_PORT") &
 pids+=($!)
 
 echo "→ Starting the frontend on http://localhost:$FRONTEND_PORT …"
@@ -54,6 +55,8 @@ for _ in $(seq 1 60); do
 done
 echo
 echo "✓ EchoVault Nexus is starting. Open http://localhost:$FRONTEND_PORT"
-echo "  (the first page load takes a few seconds while it compiles). Press Ctrl+C to stop."
+echo "  (the first page load takes a few seconds while it compiles)."
+echo "  Emails the app sends (e.g. password resets) appear at http://localhost:8025"
+echo "  Press Ctrl+C to stop."
 echo
 wait -n "${pids[@]}"

@@ -27,5 +27,15 @@ services:
       timeout: 5s
       retries: 10
 
+  # Local email tester: catches every email the app sends (nothing is really
+  # delivered) and shows them at http://localhost:8025. Development only.
+  mailpit:
+    image: axllent/mailpit:v1.27
+    container_name: echovault-nexus-mail
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:1025:1025" # SMTP
+      - "127.0.0.1:8025:8025" # web inbox
+
 volumes:
   echovault_postgres_data:
