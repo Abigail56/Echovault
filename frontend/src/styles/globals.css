@@ -6,29 +6,29 @@
 }
 
 /*
- * Design tokens. Dark is the primary theme (palette from the product brief);
- * the light theme is an alternative chosen in Settings. Accents are used
- * sparingly; status colours are restrained and always paired with an icon or
- * text so colour is never the only signal.
+ * Design tokens: "Indigo & slate", a calm, professional palette.
+ * Dark is the default theme; light is chosen in Settings. Every text colour
+ * below meets WCAG AA (4.5:1 or more) on cards, the page and sunken surfaces.
+ * Status colours are always paired with an icon or text, never colour alone.
  */
 @plugin "daisyui/theme" {
   name: "echovault-dark";
   default: true;
   color-scheme: dark;
-  --color-base-100: #0f1629; /* elevated surface: cards, inputs */
-  --color-base-200: #070b16; /* page background (deep navy) */
-  --color-base-300: #1f2a44; /* borders */
-  --color-base-content: #e8edf7;
-  --color-primary: #5b8cff;
-  --color-primary-content: #050a1a;
-  --color-secondary: #2dd4bf;
-  --color-secondary-content: #032621;
-  --color-accent: #2dd4bf;
-  --color-accent-content: #032621;
-  --color-neutral: #162038;
-  --color-neutral-content: #e8edf7;
-  --color-info: #60a5fa;
-  --color-info-content: #04172f;
+  --color-base-100: #13141c; /* elevated surface: cards, inputs */
+  --color-base-200: #0b0c12; /* page background (ink) */
+  --color-base-300: #262837; /* borders */
+  --color-base-content: #ecedf3;
+  --color-primary: #8b8ff9; /* indigo */
+  --color-primary-content: #0c0b24;
+  --color-secondary: #c4a1ff; /* violet */
+  --color-secondary-content: #1d0f3a;
+  --color-accent: #c4a1ff;
+  --color-accent-content: #1d0f3a;
+  --color-neutral: #1b1d28;
+  --color-neutral-content: #ecedf3;
+  --color-info: #38bdf8;
+  --color-info-content: #041a2b;
   --color-success: #34d399;
   --color-success-content: #032318;
   --color-warning: #fbbf24;
@@ -37,38 +37,40 @@
   --color-error-content: #2b0707;
   --radius-selector: 0.5rem;
   --radius-field: 0.625rem;
-  --radius-box: 1rem;
+  --radius-box: 0.875rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   --border: 1px;
   --depth: 1;
   --noise: 0;
-  --ev-muted: #a3aec4; /* secondary text (8:1 on cards) */
-  --ev-subtle: #8b97b0; /* metadata (6:1 on cards) */
-  --ev-surface-sunken: #131c33; /* secondary surface: code, previews */
-  --ev-sidebar: #0a1020;
-  --ev-shadow: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.6);
-  --ev-shadow-hover: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 16px 36px -16px rgb(0 0 0 / 0.75);
-  --ev-backdrop: radial-gradient(1200px 520px at 15% -10%, rgb(91 140 255 / 0.10), transparent 60%),
-    radial-gradient(900px 480px at 100% 0%, rgb(45 212 191 / 0.06), transparent 55%);
+  --ev-muted: #a6aabb; /* secondary text (7.9:1 on cards) */
+  --ev-subtle: #8d92a5; /* metadata (5.9:1 on cards) */
+  --ev-surface-sunken: #181a24; /* secondary surface: code, previews */
+  --ev-sidebar: #0e0f16;
+  --ev-shadow: 0 1px 0 rgb(255 255 255 / 0.035) inset, 0 1px 2px rgb(0 0 0 / 0.45), 0 10px 28px -14px rgb(0 0 0 / 0.7);
+  --ev-shadow-hover: 0 1px 0 rgb(255 255 255 / 0.05) inset, 0 18px 40px -18px rgb(0 0 0 / 0.8),
+    0 0 0 1px rgb(139 143 249 / 0.18);
+  --ev-backdrop: radial-gradient(1100px 520px at 12% -12%, rgb(99 102 241 / 0.13), transparent 60%),
+    radial-gradient(900px 480px at 100% -5%, rgb(167 139 250 / 0.08), transparent 55%);
+  --ev-brand: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
 }
 
 @plugin "daisyui/theme" {
   name: "echovault";
   color-scheme: light;
   --color-base-100: #ffffff;
-  --color-base-200: #f4f6fb;
-  --color-base-300: #e2e8f0;
-  --color-base-content: #0f172a;
-  --color-primary: #2557e8;
+  --color-base-200: #f6f7fb;
+  --color-base-300: #e3e5ee;
+  --color-base-content: #12141c;
+  --color-primary: #4f46e5; /* indigo */
   --color-primary-content: #ffffff;
-  --color-secondary: #0f766e;
+  --color-secondary: #7c3aed; /* violet */
   --color-secondary-content: #ffffff;
-  --color-accent: #0f766e;
+  --color-accent: #7c3aed;
   --color-accent-content: #ffffff;
-  --color-neutral: #0f172a;
-  --color-neutral-content: #f8fafc;
-  --color-info: #1d4ed8;
+  --color-neutral: #12141c;
+  --color-neutral-content: #f8f9fc;
+  --color-info: #0369a1;
   --color-info-content: #ffffff;
   --color-success: #047857;
   --color-success-content: #ffffff;
@@ -78,20 +80,22 @@
   --color-error-content: #ffffff;
   --radius-selector: 0.5rem;
   --radius-field: 0.625rem;
-  --radius-box: 1rem;
+  --radius-box: 0.875rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   --border: 1px;
   --depth: 1;
   --noise: 0;
-  --ev-muted: #475569;
-  --ev-subtle: #5b6678;
-  --ev-surface-sunken: #f1f5f9;
-  --ev-sidebar: #ffffff;
-  --ev-shadow: 0 1px 2px rgb(15 23 42 / 0.05), 0 4px 16px -8px rgb(15 23 42 / 0.10);
-  --ev-shadow-hover: 0 2px 4px rgb(15 23 42 / 0.05), 0 16px 32px -14px rgb(15 23 42 / 0.20);
-  --ev-backdrop: radial-gradient(1200px 520px at 15% -10%, rgb(37 87 232 / 0.07), transparent 60%),
-    radial-gradient(900px 480px at 100% 0%, rgb(15 118 110 / 0.05), transparent 55%);
+  --ev-muted: #4a5060;
+  --ev-subtle: #5d6273;
+  --ev-surface-sunken: #f1f2f7;
+  --ev-sidebar: #fbfbfe;
+  --ev-shadow: 0 1px 2px rgb(18 20 28 / 0.05), 0 6px 18px -10px rgb(18 20 28 / 0.12);
+  --ev-shadow-hover: 0 2px 4px rgb(18 20 28 / 0.05), 0 18px 36px -16px rgb(79 70 229 / 0.22),
+    0 0 0 1px rgb(79 70 229 / 0.12);
+  --ev-backdrop: radial-gradient(1100px 520px at 12% -12%, rgb(79 70 229 / 0.07), transparent 60%),
+    radial-gradient(900px 480px at 100% -5%, rgb(124 58 237 / 0.05), transparent 55%);
+  --ev-brand: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
 }
 
 @theme inline {
@@ -120,6 +124,9 @@
     body {
       font-size: 16px;
     }
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--color-primary) 30%, transparent);
   }
   :focus-visible {
     outline: 2px solid var(--color-primary);
@@ -159,6 +166,10 @@
   .surface {
     @apply rounded-box border border-base-300 bg-base-100;
     box-shadow: var(--ev-shadow);
+  }
+  /* Solid brand gradient (logo tile, avatar, highlights). */
+  .bg-brand {
+    background-image: var(--ev-brand);
   }
   /* Text with the brand gradient (headings on the landing page). */
   .text-gradient {

@@ -11,7 +11,7 @@ export default function Document() {
           content="EchoVault Nexus: capture what you learn, organise your projects and preserve the reasoning behind your decisions."
         />
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-        <meta name="theme-color" content="#070B16" />
+        <meta name="theme-color" content="#0B0C12" />
         {/* Static, trusted script: applies the saved theme before first paint. */}
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </Head>
