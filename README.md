@@ -225,7 +225,7 @@ AI_MODEL=llama3.1
 
 ## Legal documents and Terms versions
 
-The legal pages live in `frontend/src/pages/{terms,privacy,acceptable-use,cookies,contact}.tsx`. Business details are placeholders in `frontend/src/lib/legal.ts` (`OPERATOR`).
+The legal pages live in `frontend/src/pages/{terms,privacy,acceptable-use,cookies,contact}.tsx`. Business details (operator name, address, contact and privacy emails, governing law) are set with `NEXT_PUBLIC_*` variables in `frontend/.env.local` (see `frontend/.env.example`); unset values appear as visible `[placeholders]`, and configured email addresses become clickable `mailto:` links. Restart `npm run dev` (or rebuild) after changing them.
 
 Sign-up requires ticking an unticked-by-default Terms checkbox. The frontend sends the Terms version it displayed, and the backend stores it with the acceptance time (`users.terms_version`, `users.terms_accepted_at`). When you change the Terms materially:
 

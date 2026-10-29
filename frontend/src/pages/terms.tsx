@@ -2,6 +2,7 @@ import Head from "next/head";
 import Link from "next/link";
 
 import { LegalLayout } from "@/components/layout/PublicLayout";
+import { EmailLink } from "@/components/ui/EmailLink";
 import { OPERATOR, TERMS_VERSION } from "@/lib/legal";
 
 export default function TermsPage() {
@@ -36,7 +37,7 @@ export default function TermsPage() {
         <ul>
           <li>You must provide accurate information and be at least [minimum age] years old.</li>
           <li>Keep your password secret. You are responsible for activity under your account.</li>
-          <li>Tell us promptly at {OPERATOR.contactEmail} if you believe your account has been compromised.</li>
+          <li>Tell us promptly at <EmailLink address={OPERATOR.contactEmail} subject="Account security" /> if you believe your account has been compromised.</li>
           <li>One account is for one person.</li>
         </ul>
 
@@ -99,7 +100,7 @@ export default function TermsPage() {
         <h2 id="law">11. Governing law and disputes</h2>
         <p>
           These terms are governed by the laws of {OPERATOR.jurisdiction}. Before starting formal proceedings, please contact us at{" "}
-          {OPERATOR.contactEmail} so we can try to resolve the issue. Disputes will be handled by the courts of [court jurisdiction],
+          <EmailLink address={OPERATOR.contactEmail} /> so we can try to resolve the issue. Disputes will be handled by the courts of [court jurisdiction],
           without affecting any mandatory consumer rights to bring claims where you live.
         </p>
 

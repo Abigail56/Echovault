@@ -2,6 +2,7 @@ import Head from "next/head";
 import Link from "next/link";
 
 import { LegalLayout } from "@/components/layout/PublicLayout";
+import { EmailLink } from "@/components/ui/EmailLink";
 import { OPERATOR } from "@/lib/legal";
 
 export default function PrivacyPage() {
@@ -23,7 +24,7 @@ export default function PrivacyPage() {
         <h2 id="who">1. Who is responsible</h2>
         <p>
           EchoVault Nexus is operated by {OPERATOR.name}, {OPERATOR.address} (&quot;we&quot;, &quot;us&quot;). For privacy questions or
-          requests, contact {OPERATOR.privacyEmail}.
+          requests, contact <EmailLink address={OPERATOR.privacyEmail} subject="Privacy request" />.
         </p>
 
         <h2 id="collect">2. What we collect</h2>
