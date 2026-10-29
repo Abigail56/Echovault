@@ -65,6 +65,16 @@ Echovault/
 - Node.js 22+
 - Docker with Docker Compose
 
+## Quick start (after setup)
+
+Once setup below is done, start everything with one command from the project folder:
+
+```bash
+./dev.sh
+```
+
+It starts the database, applies migrations, runs the backend (port 8010) and frontend (port 3001) using the project's own Python environment, and prints the address to open: <http://localhost:3001>. Press **Ctrl+C** to stop. Use other ports with `BACKEND_PORT=8000 FRONTEND_PORT=3000 ./dev.sh`.
+
 ## Setup
 
 ### 1. Configure the backend
