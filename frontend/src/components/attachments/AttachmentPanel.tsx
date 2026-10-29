@@ -11,6 +11,9 @@ import { formatBytes } from "@/lib/format";
 import { ExtractionBadge } from "./ExtractionBadge";
 import { TextViewer } from "./TextViewer";
 
+/** The panel's hidden file input; the "Attach files" header button opens it. */
+export const ATTACH_INPUT_ID = "attachment-file-input";
+
 export const ACCEPT = "image/png,image/jpeg,image/gif,image/webp,application/pdf,text/plain,text/markdown,text/csv,.md,.txt,.csv";
 const POLL_MS = 2000;
 const POLL_LIMIT = 90; // about three minutes
@@ -141,7 +144,7 @@ export function AttachmentPanel({ noteId, initial, onAddToNote }: AttachmentPane
   };
 
   return (
-    <section className="mt-6" aria-labelledby="attachments-heading">
+    <section id="attachments" className="mt-6 scroll-mt-20" aria-labelledby="attachments-heading">
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="attachments-heading" className="text-section flex items-center gap-2">
           <Paperclip className="size-4" aria-hidden /> Attachments
@@ -171,7 +174,7 @@ export function AttachmentPanel({ noteId, initial, onAddToNote }: AttachmentPane
         <UploadCloud className="text-primary mx-auto size-8" aria-hidden />
         <p className="mt-2 text-sm">
           Drop files here,{" "}
-          <button type="button" className="link link-primary" onClick={() => inputRef.current?.click()}>
+          <button type="button" className="link link-primary font-semibold" onClick={() => inputRef.current?.click()}>
             choose files
           </button>
           , or paste a screenshot with <kbd className="kbd kbd-sm">Ctrl</kbd>+<kbd className="kbd kbd-sm">V</kbd>
@@ -188,6 +191,7 @@ export function AttachmentPanel({ noteId, initial, onAddToNote }: AttachmentPane
         )}
         <input
           ref={inputRef}
+          id={ATTACH_INPUT_ID}
           type="file"
           multiple
           accept={ACCEPT}

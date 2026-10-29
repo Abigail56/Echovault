@@ -1,10 +1,10 @@
-import { Archive, ArchiveRestore, BookOpen, CalendarClock, FolderKanban, Link2, PencilLine, Scale, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, BookOpen, Paperclip, CalendarClock, FolderKanban, Link2, PencilLine, Scale, Trash2 } from "lucide-react";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
 
-import { AttachmentPanel } from "@/components/attachments/AttachmentPanel";
+import { ATTACH_INPUT_ID, AttachmentPanel } from "@/components/attachments/AttachmentPanel";
 import { KnowledgeForm } from "@/components/knowledge/KnowledgeForm";
 import { appLayout } from "@/components/layout/AppShell";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -72,6 +72,16 @@ const KnowledgeDetailPage: PageWithLayout = () => {
     }
   };
 
+  // While editing, the form holds unsaved text, so copy instead of saving over it.
+  const copyForEditing = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text.trim());
+      toast.success("Text copied. Paste it into the content box with Ctrl+V.");
+    } catch {
+      toast.error("Couldn't copy. Select the text and copy it manually.");
+    }
+  };
+
   const remove = async () => {
     setDeleting(true);
     try {
@@ -101,6 +111,16 @@ const KnowledgeDetailPage: PageWithLayout = () => {
         actions={
           !editing && (
             <>
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                onClick={() => {
+                  document.getElementById("attachments")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  document.getElementById(ATTACH_INPUT_ID)?.click();
+                }}
+              >
+                <Paperclip className="size-4" aria-hidden /> Attach files
+              </button>
               <button type="button" className="btn btn-sm" onClick={() => setEditing(true)}>
                 <PencilLine className="size-4" aria-hidden /> Edit
               </button>
@@ -141,7 +161,9 @@ const KnowledgeDetailPage: PageWithLayout = () => {
             }}
           />
         </div>
-      ) : (
+      ) : null}
+      {editing && <AttachmentPanel key={`edit-${k.id}`} noteId={k.id} initial={k.attachments} onAddToNote={copyForEditing} />}
+      {!editing && (
         <>
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_17rem]">
             <article className="surface min-w-0 p-5 sm:p-8">

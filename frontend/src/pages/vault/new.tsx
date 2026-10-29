@@ -1,3 +1,4 @@
+import { Paperclip } from "lucide-react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 
@@ -23,6 +24,11 @@ const NewKnowledgePage: PageWithLayout = () => {
         <title>New knowledge · EchoVault Nexus</title>
       </Head>
       <PageHeader title="Capture knowledge" breadcrumbs={[{ label: "Vault", href: "/vault" }, { label: "New item" }]} />
+      <p className="text-muted mb-4 flex items-center gap-2 text-sm">
+        <Paperclip className="size-4 shrink-0" aria-hidden />
+        Want to add screenshots or files? Save the note first, then use <strong className="text-base-content">Attach files</strong> on the
+        note&apos;s page.
+      </p>
       <div className="surface p-5 sm:p-6">
         <KnowledgeForm
           submitLabel="Save to vault"

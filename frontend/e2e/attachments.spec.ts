@@ -31,6 +31,20 @@ test.describe("File and screenshot attachments", () => {
     await expect(page.getByRole("link", { name: /Vendor research/ })).toBeVisible();
   });
 
+  test("the Attach files button at the top of a note opens the file picker", async ({ page }) => {
+    const note = await apiPost(page, "/knowledge", { title: "Screens", content: "" });
+    await page.goto(`/vault/${note.id}`);
+    const chooser = page.waitForEvent("filechooser");
+    await page.getByRole("button", { name: "Attach files" }).click();
+    await (await chooser).setFiles({ name: "shot.txt", mimeType: "text/plain", buffer: Buffer.from("picked from a folder") });
+    await expect(page.getByTestId("attachment-item")).toContainText("shot.txt");
+    await page.screenshot({ path: "/tmp/claude-1000/-home-chinecherem-Documents-CAAPSTOON-APF-Echovault/f69ce720-952a-4ab0-8aa9-e7ebeb11bc33/scratchpad/shots/attach-button.png" });
+
+    // The attachments box is also available while editing.
+    await page.getByRole("button", { name: "Edit" }).click();
+    await expect(page.getByRole("button", { name: "choose files", exact: true })).toBeVisible();
+  });
+
   test("dangerous files are refused", async ({ page }) => {
     const note = await apiPost(page, "/knowledge", { title: "Safety", content: "" });
     await page.goto(`/vault/${note.id}`);
