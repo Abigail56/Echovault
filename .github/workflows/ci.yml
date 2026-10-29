@@ -79,9 +79,17 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U echovault -d echovault_e2e"
           --health-interval 5s --health-timeout 5s --health-retries 10
+      # Catches the password-reset emails sent during the tests.
+      mailpit:
+        image: axllent/mailpit:v1.27
+        ports:
+          - 1025:1025
+          - 8025:8025
     env:
       # Throwaway values for the CI database only.
       E2E_DATABASE_URL: postgresql+psycopg://echovault:ci-only-password@127.0.0.1:5432/echovault_e2e
+      E2E_SMTP_HOST: 127.0.0.1
+      MAILPIT_API: http://127.0.0.1:8025/api/v1
       E2E_PYTHON: python
       JWT_SECRET_KEY: ci-only-secret-key-that-is-at-least-32-characters
     steps:

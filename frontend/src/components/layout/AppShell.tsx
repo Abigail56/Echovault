@@ -42,7 +42,7 @@ function NavLinks({ collapsed = false, onNavigate }: { collapsed?: boolean; onNa
   const linkClass = (active: boolean) =>
     `flex items-center gap-3 rounded-field px-3 py-2 text-sm font-medium transition-all duration-200 ${
       active
-        ? "bg-primary/10 text-primary shadow-[inset_3px_0_0_var(--color-primary)]"
+        ? "bg-primary/15 text-primary font-semibold shadow-[inset_3px_0_0_var(--color-primary)]"
         : "text-muted hover:bg-base-200 hover:text-base-content hover:translate-x-0.5"
     } ${collapsed ? "justify-center px-0" : ""}`;
 

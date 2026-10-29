@@ -31,7 +31,7 @@ export function ConnectionMap({ center, groups, caption }: ConnectionMapProps) {
   return (
     <figure className="surface p-5 sm:p-6" aria-label={caption ?? `Connections of ${center.title}`}>
       <div className="flex justify-center">
-        <div className="border-primary/50 bg-primary/10 flex max-w-full items-center gap-2.5 rounded-box border px-4 py-2.5">
+        <div className="border-primary bg-primary/15 animate-pop flex max-w-full items-center gap-2.5 rounded-box border px-4 py-2.5 shadow-lg shadow-black/20">
           <center.icon className="text-primary size-4 shrink-0" aria-hidden />
           <span className="min-w-0">
             <span className="text-meta block leading-tight">{center.kind}</span>
@@ -40,16 +40,17 @@ export function ConnectionMap({ center, groups, caption }: ConnectionMapProps) {
         </div>
       </div>
       {/* Trunk line from the centre node down to the branches. */}
-      <div className="bg-base-300 mx-auto hidden h-5 w-px md:block" aria-hidden />
+      <div className="bg-primary/60 grow-y mx-auto hidden h-5 w-px [--delay:0.2s] md:block" aria-hidden />
       <div
-        className={`relative mt-4 grid gap-5 md:mt-0 md:gap-4 ${cols} md:before:bg-base-300 md:before:absolute md:before:top-0 md:before:h-px ${
+        className={`relative mt-4 grid gap-5 md:mt-0 md:gap-4 ${cols} md:before:bg-primary/60 md:before:absolute md:before:top-0 md:before:h-px md:before:origin-center md:before:animate-[ev-grow-x_0.5s_ease-out_0.45s_both] ${
           groups.length === 2 ? "md:before:right-1/4 md:before:left-1/4" : "md:before:right-[16.66%] md:before:left-[16.66%]"
         }`}
       >
-        {groups.map((group) => (
+        {groups.map((group, index) => (
           <div
             key={group.label}
-            className="border-base-300 relative min-w-0 border-l pl-4 md:border-l-0 md:pt-5 md:pl-0 md:before:bg-base-300 md:before:absolute md:before:top-0 md:before:left-1/2 md:before:h-5 md:before:w-px"
+            style={{ animationDelay: `${0.85 + index * 0.12}s` }}
+            className="border-primary/40 animate-page-in relative min-w-0 border-l pl-4 md:border-l-0 md:pt-5 md:pl-0 md:before:bg-primary/60 md:before:absolute md:before:top-0 md:before:left-1/2 md:before:h-5 md:before:w-px md:before:origin-top md:before:animate-[ev-grow-y_0.3s_ease-out_0.8s_both]"
           >
             <p className="text-meta mb-2 flex items-center gap-1.5 font-medium md:justify-center">
               <group.icon className="size-3.5" aria-hidden />

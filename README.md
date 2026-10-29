@@ -7,7 +7,7 @@ A personal knowledge and project-intelligence workspace. Capture notes, group th
 | Area | What works today |
 |---|---|
 | **Accounts** | Register (with Terms acceptance), sign in, sign out, sign out of all devices, profile editing, email change (password-confirmed), password change, JSON data export, re-acceptance of updated Terms, self-service account deletion (password + typed confirmation; deletes all data). Argon2 password hashing. HttpOnly cookie sessions with refresh-token rotation, server-side revocation and CSRF protection. Rate-limited auth endpoints. |
-| **Password reset** | Full email flow (single-use, expiring, hashed tokens; no account enumeration). Needs SMTP settings; without them, the UI says it isn't configured. |
+| **Password reset** | Full email flow (single-use, expiring, hashed tokens; no account enumeration), verified end to end with real SMTP delivery to a local Mailpit inbox. Needs SMTP settings; without them, the UI says it isn't configured. |
 | **Knowledge Vault** | Create, read, update, delete, archive/restore. Markdown editor with preview (rendered safely, no raw HTML). Tags, project links, two-way related-note links, a connection map of each note's project, decisions and related notes, keyword search, tag/project filters, sorting, pagination, save status and unsaved-changes warning. |
 | **Projects** | CRUD, statuses (active / on hold / completed / archived), linked knowledge and decisions, counts. Deleting a project keeps its notes and decisions. |
 | **Decision Journal** | Context, problem statement, alternatives, selected option, reasoning, expected and actual outcome. Status (proposed / accepted / superseded / reviewed) and last-review date. Project links, search, status/project filters. |
@@ -64,6 +64,16 @@ Echovault/
 - Python 3.12+ (developed on 3.14)
 - Node.js 22+
 - Docker with Docker Compose
+
+## Quick start (after setup)
+
+Once setup below is done, start everything with one command from the project folder:
+
+```bash
+./dev.sh
+```
+
+It starts the database, applies migrations, runs the backend (port 8010) and frontend (port 3001) using the project's own Python environment, and prints the address to open: <http://localhost:3001>. Press **Ctrl+C** to stop. Use other ports with `BACKEND_PORT=8000 FRONTEND_PORT=3000 ./dev.sh`.
 
 ## Setup
 
@@ -213,15 +223,39 @@ Set in `backend/.env` and restart the backend:
 AI_PROVIDER=anthropic
 AI_API_KEY=sk-ant-...
 
-# OR a free local model with Ollama (https://ollama.com): `ollama pull llama3.1`
+# OR a free local model with Ollama (https://ollama.com), no account or payment needed
 AI_PROVIDER=openai_compatible
 AI_BASE_URL=http://127.0.0.1:11434/v1
-AI_MODEL=llama3.1
+AI_MODEL=qwen2.5:1.5b        # `ollama pull qwen2.5:1.5b`; use a bigger model (e.g. llama3.1) if you have the RAM
+AI_TIMEOUT_SECONDS=180
 ```
+
+**What to expect (verified):** with Claude, answers take a few seconds and cite sources as `[1]`, `[2]`. With `qwen2.5:1.5b` on a CPU-only laptop (Intel i5, ~1.2 GB RAM for the model), answers took 13–38 seconds and were grounded in the user's notes and decisions, but the model did not write citation markers (sources are then listed as "retrieved but not cited") and occasionally added a detail not in the notes. Isolation was verified with the real model: another user's note and an archived note were never sent, and an unanswerable question returned the "nothing found" message without calling the model at all. If the Anthropic account has no credit, users now see a clear "out of credit" message.
+
+Only one provider is active at a time. When switching, update `AI_PROVIDER`, `AI_API_KEY`, `AI_BASE_URL` and `AI_MODEL` together. In particular, `AI_BASE_URL` must be empty for Anthropic, and restart the backend.
 
 **Privacy implications:** when a user asks a question, up to `AI_MAX_SOURCES` (default 6) of *that user's* most relevant notes, plus the question, are sent to the configured provider. With `anthropic`, that data leaves your server and is handled under Anthropic's data policies. With a local Ollama, it stays on your machine. The assistant page tells users which provider receives their notes. Nothing is sent when no notes match.
 
 **Prompt-injection defence:** notes are wrapped as escaped `<source>` data, the system prompt tells the model never to follow instructions inside sources, and only records the backend retrieved for that user can appear as sources. Citation numbers that don't match a retrieved source are ignored. This reduces risk but can't make a language model fully immune, so treat answers as suggestions and check the linked sources.
+
+## Email in development (Mailpit)
+
+`./dev.sh` also starts **Mailpit**, a local email tester: the app's emails (password resets, email-change notices) are caught instead of delivered, and you can read them at <http://localhost:8025>. Configure the backend to use it in `backend/.env`:
+
+```
+SMTP_HOST=127.0.0.1
+SMTP_PORT=1025
+SMTP_FROM=noreply@echovault.local
+SMTP_STARTTLS=false
+```
+
+Restart the backend after changing `.env`. To run the password-reset browser test locally:
+
+```bash
+cd frontend && E2E_SMTP_HOST=127.0.0.1 MAILPIT_API=http://127.0.0.1:8025/api/v1 npm run test:e2e -- e2e/password-reset.spec.ts
+```
+
+In production, replace these with a real email provider's SMTP settings (and `SMTP_STARTTLS=true`).
 
 ## Legal documents and Terms versions
 

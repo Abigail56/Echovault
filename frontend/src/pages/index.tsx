@@ -21,6 +21,7 @@ import { useRouter } from "next/router";
 import type { ReactNode } from "react";
 
 import { PublicFooter, PublicNav } from "@/components/layout/PublicLayout";
+import { HeroGraph } from "@/components/landing/HeroGraph";
 import { ConnectionMap } from "@/components/ui/ConnectionMap";
 import { Reveal } from "@/components/ui/Reveal";
 import { useAuth } from "@/hooks/useAuth";
@@ -194,22 +195,22 @@ export default function Home() {
         )}
 
         {/* Hero */}
-        <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-14 pb-20 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:pt-24 lg:pb-28">
+        <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-14 pb-20 sm:px-6 lg:grid-cols-[1.25fr_1fr] lg:pt-24 lg:pb-28">
           <div className="stagger">
             <p className="eyebrow">Personal knowledge &amp; project intelligence</p>
             <h1 className="text-display mt-4">{HEADLINE}</h1>
             <p className="text-muted mt-6 max-w-xl text-[1.0625rem] leading-relaxed">{SUPPORT}</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href={primaryCta.href} className="btn btn-primary nudge-icon grow sm:grow-0">
-                {primaryCta.label} <ArrowRight className="size-4" aria-hidden />
+              <Link href={primaryCta.href} className="btn btn-primary btn-lg nudge-icon grow font-semibold sm:grow-0">
+                {primaryCta.label} <ArrowRight className="size-5" aria-hidden />
               </Link>
-              <Link href="#workspace" className="btn btn-outline border-base-300 grow sm:grow-0">
+              <Link href="#workspace" className="btn btn-outline btn-lg border-base-300 grow font-semibold sm:grow-0">
                 Explore the workspace
               </Link>
             </div>
           </div>
-          <div className="animate-page-in min-w-0 [animation-delay:200ms]">
-            <ProductPreview />
+          <div className="min-w-0">
+            <HeroGraph />
           </div>
         </section>
 
@@ -217,9 +218,14 @@ export default function Home() {
         <section id="features" className="border-base-300 bg-sidebar scroll-mt-16 border-y py-20 sm:py-24">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <p className="eyebrow">Features</p>
-            <h2 className="text-headline mt-2 max-w-2xl">Five tools that work together</h2>
+            <h2 className="text-headline mt-2 max-w-2xl">Five tools. One connected workspace.</h2>
             <p className="text-muted mt-3 max-w-2xl">Everything lives in one place and links together, so what you learn stays findable long after you save it.</p>
-            <div id="workspace" className="mt-12 grid scroll-mt-24 gap-5">
+            <Reveal className="mx-auto mt-12 max-w-3xl">
+              <div id="workspace" className="scroll-mt-24">
+                <ProductPreview />
+              </div>
+            </Reveal>
+            <div className="mt-12 grid gap-5">
               <FeatureRow
                 icon={BookOpen}
                 eyebrow="Knowledge Vault"

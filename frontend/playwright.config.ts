@@ -63,9 +63,13 @@ export default defineConfig({
         RATE_LIMIT_ENABLED: "false",
         TRUST_PROXY_HEADERS: "true",
         FRONTEND_ORIGIN: `http://127.0.0.1:${FRONTEND_PORT}`,
-        // The assistant and email are tested as "not configured" here.
+        // The assistant is tested as "not configured". Email is off unless a
+        // Mailpit inbox is provided (E2E_SMTP_HOST + MAILPIT_API), as in CI.
         AI_PROVIDER: "",
-        SMTP_HOST: "",
+        SMTP_HOST: process.env.E2E_SMTP_HOST ?? "",
+        SMTP_PORT: process.env.E2E_SMTP_PORT ?? "1025",
+        SMTP_FROM: "noreply@echovault.test",
+        SMTP_STARTTLS: "false",
       },
     },
     {
