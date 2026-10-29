@@ -48,3 +48,17 @@ def send_password_reset(sender: EmailSender, to: str, name: str, token: str) -> 
     except Exception:
         # Never log the token or the recipient's address.
         logger.exception("Failed to send password reset email")
+
+
+def send_email_changed_notice(sender: EmailSender, old_email: str, name: str) -> None:
+    """Warn the previous address (without revealing the new one) so a hijack can be noticed."""
+    body = (
+        f"Hi {name},\n\n"
+        "The sign-in email for your EchoVault Nexus account was just changed to a new address.\n"
+        "If you made this change, you don't need to do anything.\n"
+        "If you didn't, reply to the operator's contact address immediately.\n"
+    )
+    try:
+        sender.send(old_email, "Your EchoVault Nexus email address was changed", body)
+    except Exception:
+        logger.exception("Failed to send email-changed notice")

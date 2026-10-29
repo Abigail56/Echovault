@@ -13,7 +13,15 @@ import { authApi } from "@/lib/api/services";
 import { formatDate } from "@/lib/format";
 import { applyServerErrors } from "@/lib/forms";
 import type { PageWithLayout } from "@/lib/layout";
-import { changePasswordSchema, type ChangePasswordValues, PASSWORD_MIN, profileSchema, type ProfileValues } from "@/lib/schemas";
+import {
+  changeEmailSchema,
+  type ChangeEmailValues,
+  changePasswordSchema,
+  type ChangePasswordValues,
+  PASSWORD_MIN,
+  profileSchema,
+  type ProfileValues,
+} from "@/lib/schemas";
 
 function ProfileForm() {
   const { user, setUser } = useAuth();
@@ -46,13 +54,61 @@ function ProfileForm() {
       <Field label="Full name" error={errors.full_name?.message}>
         <input className="input w-full" autoComplete="name" {...register("full_name")} />
       </Field>
-      <Field label="Email" hint="Email changes aren't supported yet.">
+      <Field label="Email" hint="Change it in the section below.">
         <input className="input w-full" value={user?.email ?? ""} readOnly disabled />
       </Field>
       {user && <p className="text-meta">Member since {formatDate(user.created_at)}</p>}
       <div className="flex justify-end">
         <button type="submit" className="btn btn-primary btn-sm" disabled={isSubmitting || !isDirty}>
           {isSubmitting && <span className="loading loading-spinner loading-xs" aria-hidden />} Save
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function EmailForm() {
+  const { user, setUser } = useAuth();
+  const toast = useToast();
+  const [formError, setFormError] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    setError,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ChangeEmailValues>({ resolver: zodResolver(changeEmailSchema) });
+
+  const onSubmit = handleSubmit(async ({ new_email, password }) => {
+    setFormError(null);
+    try {
+      const updated = await authApi.changeEmail(new_email, password);
+      setUser(updated);
+      reset({ new_email: "", password: "" });
+      toast.success("Email address changed. Use it the next time you sign in.");
+    } catch (error) {
+      setFormError(applyServerErrors(error, setError, ["new_email", "password"]));
+    }
+  });
+
+  return (
+    <form onSubmit={onSubmit} noValidate className="surface flex flex-col gap-4 p-5 sm:p-6">
+      <div>
+        <h2 className="text-section">Change email</h2>
+        <p className="text-meta">
+          You sign in with this address{user ? ` (currently ${user.email})` : ""}. If email is configured, we notify your old address.
+        </p>
+      </div>
+      <InlineError message={formError} />
+      <Field label="New email" error={errors.new_email?.message}>
+        <input type="email" className="input w-full" autoComplete="email" {...register("new_email")} />
+      </Field>
+      <Field label="Current password" error={errors.password?.message} hint="Required to confirm it's really you.">
+        <input type="password" className="input w-full" autoComplete="current-password" {...register("password")} />
+      </Field>
+      <div className="flex justify-end">
+        <button type="submit" className="btn btn-primary btn-sm" disabled={isSubmitting}>
+          {isSubmitting && <span className="loading loading-spinner loading-xs" aria-hidden />} Change email
         </button>
       </div>
     </form>
@@ -111,9 +167,10 @@ const ProfilePage: PageWithLayout = () => (
     <Head>
       <title>Profile · EchoVault Nexus</title>
     </Head>
-    <PageHeader title="Profile" description="Your account details and password." />
+    <PageHeader title="Profile" description="Your name, sign-in email and password." />
     <div className="grid max-w-2xl gap-6">
       <ProfileForm />
+      <EmailForm />
       <PasswordForm />
     </div>
   </>

@@ -120,13 +120,14 @@ export default function PrivacyPage() {
         <h2 id="rights">7. Your rights and choices</h2>
         <ul>
           <li>
-            <strong>Access and correction:</strong> view and edit your content and name at any time in the app.
+            <strong>Access and correction:</strong> view and edit your content, name and email address at any time in the app.
           </li>
           <li>
             <strong>Deletion:</strong> delete individual records, or your whole account from <Link href="/settings">Settings</Link>.
           </li>
           <li>
-            <strong>Export:</strong> a self-service export is not available yet; contact {OPERATOR.privacyEmail} for a copy of your data.
+            <strong>Export:</strong> download a copy of everything stored for your account as a JSON file from{" "}
+            <Link href="/settings">Settings → Your data</Link>.
           </li>
           <li>
             Depending on where you live, you may also have rights to object, restrict processing, and complain to a data-protection

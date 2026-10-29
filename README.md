@@ -6,7 +6,7 @@ A personal knowledge and project-intelligence workspace. Capture notes, group th
 
 | Area | What works today |
 |---|---|
-| **Accounts** | Register (with Terms acceptance), sign in, sign out, sign out of all devices, profile editing, password change, self-service account deletion (password + typed confirmation; deletes all data). Argon2 password hashing. HttpOnly cookie sessions with refresh-token rotation, server-side revocation and CSRF protection. Rate-limited auth endpoints. |
+| **Accounts** | Register (with Terms acceptance), sign in, sign out, sign out of all devices, profile editing, email change (password-confirmed), password change, JSON data export, re-acceptance of updated Terms, self-service account deletion (password + typed confirmation; deletes all data). Argon2 password hashing. HttpOnly cookie sessions with refresh-token rotation, server-side revocation and CSRF protection. Rate-limited auth endpoints. |
 | **Password reset** | Full email flow (single-use, expiring, hashed tokens; no account enumeration). Needs SMTP settings; without them, the UI says it isn't configured. |
 | **Knowledge Vault** | Create, read, update, delete, archive/restore. Markdown editor with preview (rendered safely, no raw HTML). Tags, project links, two-way related-note links, a connection map of each note's project, decisions and related notes, keyword search, tag/project filters, sorting, pagination, save status and unsaved-changes warning. |
 | **Projects** | CRUD, statuses (active / on hold / completed / archived), linked knowledge and decisions, counts. Deleting a project keeps its notes and decisions. |
@@ -232,7 +232,7 @@ Sign-up requires ticking an unticked-by-default Terms checkbox. The frontend sen
 1. Update `CURRENT_TERMS_VERSION` in `backend/app/core/legal.py`.
 2. Update `TERMS_VERSION` and `LEGAL_LAST_UPDATED` in `frontend/src/lib/legal.ts` to match.
 
-The backend rejects sign-ups that accepted an older version, asking the user to reload. Asking existing users to re-accept new terms is not implemented yet.
+The backend rejects sign-ups that accepted an older version, asking the user to reload. Signed-in users whose accepted version is older see a prompt to review and accept the new Terms (with an unticked box); Settings stays reachable so they can download their data or delete their account instead.
 
 ## Troubleshooting
 
@@ -251,7 +251,8 @@ The backend rejects sign-ups that accepted an older version, asking the user to 
 - Search is keyword-based (PostgreSQL full-text). Semantic/vector search is not implemented yet. The database image supports pgvector for when it is.
 - Assistant conversations aren't saved, and each question is answered independently.
 - Rate limiting is per process (in memory). Use a shared store if you run several API instances.
-- Email address changes and a self-service data export aren't implemented (the Privacy Policy says to contact the operator for a copy).
+- Email changes take effect immediately after re-entering the password (the old address is notified when SMTP is configured); the new address is not verified by a confirmation link.
+- The updated-Terms prompt is enforced in the web app; the API itself does not block requests from users who haven't re-accepted.
 - **Legal pages are drafts.** They describe how the software actually works, but every `[bracketed]` item (operator name, address, contact emails, AI/email/hosting providers, retention periods, jurisdiction, minimum age, liability cap) must be filled in, and the text reviewed by a lawyer, before a public launch.
 - No file uploads, imports/exports, knowledge graph, or team collaboration.
 - End-to-end tests cover the main journeys in Chromium only (not Firefox/Safari), and don't exercise the AI assistant with a real provider or password-reset emails.
