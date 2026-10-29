@@ -342,3 +342,116 @@ def test_extraction_after_delete_is_harmless(user_client, db):
     attachment_id = upload(user_client, note_id, "a.txt", b"bye").json()["id"]
     user_client.delete(f"/api/v1/knowledge/{note_id}")
     run_extraction(attachment_id)  # must not raise
+
+
+# --- Office documents and RTF ----------------------------------------------------
+
+import zipfile  # noqa: E402
+
+CONTENT_TYPES = {
+    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
+    "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
+    "pptx": "application/vnd.openxmlformats-officedocument.presentationml.slide+xml",
+    "docm": "application/vnd.ms-word.document.macroEnabled.main+xml",
+}
+W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
+S = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'
+A = 'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"'
+
+
+def office_bytes(kind: str, parts: dict[str, str]) -> bytes:
+    """A minimal Office file: a ZIP with [Content_Types].xml and the given XML parts."""
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr(
+            "[Content_Types].xml",
+            f'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+            f'<Override PartName="/x" ContentType="{CONTENT_TYPES[kind]}"/></Types>',
+        )
+        for name, xml in parts.items():
+            archive.writestr(name, xml)
+    return buffer.getvalue()
+
+
+def docx_bytes(*paragraphs: str, kind: str = "docx") -> bytes:
+    body = "".join(f"<w:p><w:r><w:t>{p}</w:t></w:r></w:p>" for p in paragraphs)
+    return office_bytes(kind, {"word/document.xml": f"<w:document {W}><w:body>{body}</w:body></w:document>"})
+
+
+def extracted(client, note_id, name, data) -> dict:
+    response = upload(client, note_id, name, data)
+    assert response.status_code == 201, response.text
+    return client.get(f"/api/v1/attachments/{response.json()['id']}").json()
+
+
+def test_word_document_text_is_extracted(user_client):
+    note_id = make_note(user_client)
+    detail = extracted(user_client, note_id, "minutes.docx", docx_bytes("Budget approved", "Launch on 1 March"))
+    assert detail["kind"] == "document"
+    assert detail["content_type"].endswith("wordprocessingml.document")
+    assert detail["extraction_status"] == "done"
+    assert detail["extracted_text"] == "Budget approved\nLaunch on 1 March"
+
+
+def test_spreadsheet_text_is_extracted(user_client):
+    data = office_bytes(
+        "xlsx",
+        {
+            "xl/sharedStrings.xml": f"<sst {S}><si><t>Vendor</t></si><si><t>Contoso</t></si></sst>",
+            "xl/worksheets/sheet1.xml": f'<worksheet {S}><sheetData><row><c t="s"><v>0</v></c><c><v>42</v></c></row>'
+            f'<row><c t="s"><v>1</v></c><c t="inlineStr"><is><t>paid</t></is></c></row></sheetData></worksheet>',
+        },
+    )
+    detail = extracted(user_client, make_note(user_client), "costs.xlsx", data)
+    assert detail["extracted_text"] == "Sheet 1\nVendor\t42\nContoso\tpaid"
+
+
+def test_presentation_text_is_extracted_in_slide_order(user_client):
+    slide = lambda text: f"<p:sld {A} xmlns:p='p'><a:p><a:r><a:t>{text}</a:t></a:r></a:p></p:sld>"  # noqa: E731
+    data = office_bytes("pptx", {"ppt/slides/slide10.xml": slide("Ten"), "ppt/slides/slide2.xml": slide("Two")})
+    detail = extracted(user_client, make_note(user_client), "deck.pptx", data)
+    assert detail["extracted_text"] == "Slide 1\nTwo\n\nSlide 2\nTen"
+
+
+def test_rtf_text_is_extracted(user_client):
+    data = b"{\\rtf1\\ansi{\\fonttbl{\\f0 Arial;}}{\\*\\generator Word;}\\f0 Hello \\b world\\b0\\par Price \\u8364? 5}"
+    detail = extracted(user_client, make_note(user_client), "letter.rtf", data)
+    assert detail["kind"] == "document"
+    assert detail["extracted_text"] == "Hello world\nPrice € 5"
+
+
+def test_old_office_files_are_stored_but_marked_unsupported(user_client):
+    ole = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1" + b"\x00" * 600
+    detail = extracted(user_client, make_note(user_client), "report.doc", ole)
+    assert detail["content_type"] == "application/msword"
+    assert detail["extraction_status"] == "unsupported"
+    # The same container with an unrelated name is refused.
+    assert upload(user_client, make_note(user_client), "setup.msi", ole).status_code == 422
+
+
+def test_macro_enabled_and_other_zip_files_are_refused(user_client):
+    note_id = make_note(user_client)
+    # A macro-enabled Word file renamed to .docx.
+    assert upload(user_client, note_id, "invoice.docx", docx_bytes("hi", kind="docm")).status_code == 422
+    with_macros = io.BytesIO()
+    with zipfile.ZipFile(with_macros, "w") as archive:
+        archive.writestr("[Content_Types].xml", "<Types/>")
+        archive.writestr("word/document.xml", f"<w:document {W}/>")
+        archive.writestr("word/vbaProject.bin", b"\x00code")
+    assert upload(user_client, note_id, "x.docx", with_macros.getvalue()).status_code == 422
+    plain_zip = io.BytesIO()
+    with zipfile.ZipFile(plain_zip, "w") as archive:
+        archive.writestr("readme.txt", "hello")
+    assert upload(user_client, note_id, "files.zip", plain_zip.getvalue()).status_code == 422
+
+
+def test_documents_download_instead_of_opening(user_client):
+    note_id = make_note(user_client)
+    attachment_id = upload(user_client, note_id, "minutes.docx", docx_bytes("x")).json()["id"]
+    response = user_client.get(f"/api/v1/attachments/{attachment_id}/file")
+    assert response.headers["content-disposition"].startswith("attachment")
+
+
+def test_usage_reports_limits(user_client):
+    usage = user_client.get("/api/v1/attachments/usage").json()
+    assert usage["max_files_per_note"] == settings.MAX_ATTACHMENTS_PER_NOTE

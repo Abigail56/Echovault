@@ -1,4 +1,4 @@
-import { Download, FileText, FileType2, ImageIcon, Paperclip, RotateCw, ScanText, Trash2, UploadCloud } from "lucide-react";
+import { Download, FileSpreadsheet, FileText, FileType2, ImageIcon, Presentation, Paperclip, RotateCw, ScanText, Trash2, UploadCloud } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/useToast";
 import { errorMessage } from "@/lib/api/client";
 import { attachmentsApi } from "@/lib/api/services";
 import type { Attachment, StorageUsage, UUID } from "@/lib/api/types";
+import { ACCEPT, familyOf } from "@/lib/attachments";
 import { formatBytes } from "@/lib/format";
 
 import { ExtractionBadge } from "./ExtractionBadge";
@@ -22,7 +23,6 @@ export function openPickerOnKey(event: React.KeyboardEvent) {
   }
 }
 
-export const ACCEPT = "image/png,image/jpeg,image/gif,image/webp,application/pdf,text/plain,text/markdown,text/csv,.md,.txt,.csv";
 const POLL_MS = 2000;
 const POLL_LIMIT = 90; // about three minutes
 const STUCK_AFTER_MS = 2 * 60_000;
@@ -47,8 +47,10 @@ export function screenshotName(file: File, now = new Date()): string {
   return `screenshot-${stamp}.${ext}`;
 }
 
-function KindIcon({ kind }: { kind: Attachment["kind"] }) {
-  const Icon = kind === "image" ? ImageIcon : kind === "pdf" ? FileType2 : FileText;
+function KindIcon({ kind, filename }: { kind: Attachment["kind"]; filename: string }) {
+  const family = familyOf(filename);
+  const Icon =
+    kind === "image" ? ImageIcon : kind === "pdf" ? FileType2 : family === "spreadsheet" ? FileSpreadsheet : family === "presentation" ? Presentation : FileText;
   return <Icon className="text-muted size-6" aria-hidden />;
 }
 
@@ -193,7 +195,7 @@ export function AttachmentPanel({ noteId, initial, onAddToNote }: AttachmentPane
           or drag files here, or paste a screenshot with <kbd className="kbd kbd-sm">Ctrl</kbd>+<kbd className="kbd kbd-sm">V</kbd>
         </p>
         <p className="text-meta mt-1">
-          Images, PDFs and text files{usage ? `, up to ${formatBytes(usage.max_file_bytes)} each` : ""}. Text inside them is
+          Images, PDFs, Word, Excel, PowerPoint and text files{usage ? `, up to ${formatBytes(usage.max_file_bytes)} each` : ""}. Text inside them is
           extracted so you can search it and ask the assistant about it.
         </p>
         {usage && !usage.ocr_available && (
@@ -231,7 +233,7 @@ export function AttachmentPanel({ noteId, initial, onAddToNote }: AttachmentPane
                   // eslint-disable-next-line @next/next/no-img-element -- private, cookie-authenticated file
                   <img src={attachmentsApi.fileUrl(a.id)} alt="" className="size-full object-cover" loading="lazy" />
                 ) : (
-                  <KindIcon kind={a.kind} />
+                  <KindIcon kind={a.kind} filename={a.filename} />
                 )}
               </a>
               <div className="min-w-0 flex-1">

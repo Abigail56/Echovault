@@ -72,9 +72,12 @@ export interface Knowledge extends KnowledgeSummary {
   attachments: Attachment[];
 }
 
-export type FileKind = "image" | "pdf" | "text";
-/** pending = still reading the text; unavailable = OCR isn't installed on the server. */
-export type ExtractionStatus = "pending" | "done" | "failed" | "unavailable";
+export type FileKind = "image" | "pdf" | "text" | "document";
+/**
+ * pending = still reading the text; unavailable = OCR isn't installed on the server;
+ * unsupported = stored, but text isn't read from this format (old .doc/.xls/.ppt).
+ */
+export type ExtractionStatus = "pending" | "done" | "failed" | "unavailable" | "unsupported";
 
 export interface Attachment {
   id: UUID;
@@ -96,6 +99,7 @@ export interface StorageUsage {
   used_bytes: number;
   quota_bytes: number;
   max_file_bytes: number;
+  max_files_per_note: number;
   ocr_available: boolean;
 }
 

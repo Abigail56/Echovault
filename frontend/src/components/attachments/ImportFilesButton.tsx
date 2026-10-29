@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/useToast";
 import { errorMessage } from "@/lib/api/client";
 import { attachmentsApi, knowledgeApi } from "@/lib/api/services";
 
-import { ACCEPT } from "./AttachmentPanel";
+import { ACCEPT } from "@/lib/attachments";
 
 /** "Q3-budget_final.pdf" -> "Q3 budget final" */
 export function titleFromFilename(name: string): string {

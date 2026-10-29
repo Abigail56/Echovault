@@ -13,12 +13,14 @@ class ExtractionStatus(StrEnum):
     DONE = "done"  # text was extracted (may be empty if none was found)
     FAILED = "failed"  # the file could not be read
     UNAVAILABLE = "unavailable"  # OCR engine not installed on the server
+    UNSUPPORTED = "unsupported"  # stored, but text isn't read from this format (e.g. old .doc)
 
 
 class FileKind(StrEnum):
     IMAGE = "image"
     PDF = "pdf"
     TEXT = "text"
+    DOCUMENT = "document"  # Word, Excel, PowerPoint and RTF files
 
 
 class Attachment(SQLModel, table=True):
@@ -26,9 +28,9 @@ class Attachment(SQLModel, table=True):
 
     __tablename__ = "attachments"
     __table_args__ = (
-        CheckConstraint("kind IN ('image', 'pdf', 'text')", name="ck_attachments_kind"),
+        CheckConstraint("kind IN ('image', 'pdf', 'text', 'document')", name="ck_attachments_kind"),
         CheckConstraint(
-            "extraction_status IN ('pending', 'done', 'failed', 'unavailable')",
+            "extraction_status IN ('pending', 'done', 'failed', 'unavailable', 'unsupported')",
             name="ck_attachments_extraction_status",
         ),
     )
