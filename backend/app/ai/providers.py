@@ -62,6 +62,14 @@ class AnthropicProvider:
             )
         except anthropic.AuthenticationError as exc:
             raise ProviderError("The AI provider rejected the API key. Check AI_API_KEY.") from exc
+        except anthropic.BadRequestError as exc:
+            if "credit balance" in str(exc.message).lower():
+                raise ProviderError(
+                    "The AI provider account has run out of credit. The operator needs to add credit "
+                    "in the Anthropic Console (Plans & Billing)."
+                ) from exc
+            logger.warning("Anthropic rejected the request: %s", exc.message)
+            raise ProviderError("The AI provider rejected the request. Try again later.") from exc
         except anthropic.NotFoundError as exc:
             raise ProviderError(f"The AI model '{self.model}' was not found. Check AI_MODEL.") from exc
         except anthropic.RateLimitError as exc:
