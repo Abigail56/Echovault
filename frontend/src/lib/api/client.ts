@@ -153,6 +153,49 @@ export const api = {
   },
 };
 
+/**
+ * Upload one file and report progress (0 to 1). Uses XMLHttpRequest because
+ * fetch() can't report upload progress. Same rules as request(): cookies,
+ * CSRF header, and one refresh-and-retry on 401.
+ */
+export function uploadWithProgress<T>(
+  path: string,
+  file: Blob,
+  filename: string,
+  onProgress?: (fraction: number) => void,
+  retried = false,
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const form = new FormData();
+    form.append("file", file, filename);
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", buildUrl(path));
+    xhr.withCredentials = true;
+    xhr.setRequestHeader("Accept", "application/json");
+    const csrf = readCookie("ev_csrf");
+    if (csrf) xhr.setRequestHeader("X-CSRF-Token", csrf);
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress?.(event.loaded / event.total);
+    };
+    xhr.onerror = () => reject(new ApiError(0, "Can't reach the server. Check your connection and that the backend is running."));
+    xhr.onload = async () => {
+      if (xhr.status === 401 && !retried) {
+        if (readCookie("ev_csrf") && (await refreshSession())) {
+          uploadWithProgress<T>(path, file, filename, onProgress, true).then(resolve, reject);
+        } else {
+          onSessionExpired?.();
+          reject(new ApiError(401, "Your session has expired. Please sign in again."));
+        }
+        return;
+      }
+      const response = new Response(xhr.responseText || null, { status: xhr.status });
+      if (xhr.status < 200 || xhr.status >= 300) return reject(await toApiError(response));
+      resolve(JSON.parse(xhr.responseText) as T);
+    };
+    xhr.send(form);
+  });
+}
+
 export function errorMessage(error: unknown): string {
   if (error instanceof ApiError) return error.message;
   return "Something unexpected happened. Please try again.";

@@ -16,6 +16,7 @@ export function ExtractionBadge({ status, chars }: { status: ExtractionStatus; c
       <span className="badge badge-ghost badge-sm">No text found</span>
     );
   }
+  if (status === "unsupported") return <span className="badge badge-ghost badge-sm">Stored (text not read)</span>;
   if (status === "unavailable") return <span className="badge badge-soft badge-warning badge-sm">OCR not installed</span>;
   return <span className="badge badge-soft badge-error badge-sm">Couldn&apos;t read text</span>;
 }

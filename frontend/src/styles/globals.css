@@ -6,47 +6,53 @@
 }
 
 /*
- * Design tokens. Dark is the primary theme (palette from the product brief);
- * the light theme is an alternative chosen in Settings. Accents are used
- * sparingly; status colours are restrained and always paired with an icon or
- * text so colour is never the only signal.
+ * Design tokens: "Indigo & slate", a calm, professional palette.
+ * Dark is the default theme; light is chosen in Settings. Every text colour
+ * below meets WCAG AA (4.5:1 or more) on cards, the page and sunken surfaces.
+ * Status colours are always paired with an icon or text, never colour alone.
  */
 @plugin "daisyui/theme" {
   name: "echovault-dark";
   default: true;
   color-scheme: dark;
-  --color-base-100: #151923; /* elevated surface: cards, inputs */
-  --color-base-200: #0b0d12; /* page background */
-  --color-base-300: #282e3b; /* borders */
-  --color-base-content: #f4f6fb;
-  --color-primary: #7c83ff;
-  --color-primary-content: #0b0d12;
-  --color-secondary: #55c5f2;
-  --color-secondary-content: #04202c;
-  --color-accent: #55c5f2;
-  --color-accent-content: #04202c;
-  --color-neutral: #1b202b;
-  --color-neutral-content: #f4f6fb;
-  --color-info: #55c5f2;
-  --color-info-content: #04202c;
-  --color-success: #4cc38a;
-  --color-success-content: #05210f;
-  --color-warning: #e2b04a;
-  --color-warning-content: #231803;
-  --color-error: #f0707b;
-  --color-error-content: #2a0a0e;
+  --color-base-100: #13141c; /* elevated surface: cards, inputs */
+  --color-base-200: #0b0c12; /* page background (ink) */
+  --color-base-300: #262837; /* borders */
+  --color-base-content: #ecedf3;
+  --color-primary: #8b8ff9; /* indigo */
+  --color-primary-content: #0c0b24;
+  --color-secondary: #c4a1ff; /* violet */
+  --color-secondary-content: #1d0f3a;
+  --color-accent: #c4a1ff;
+  --color-accent-content: #1d0f3a;
+  --color-neutral: #1b1d28;
+  --color-neutral-content: #ecedf3;
+  --color-info: #38bdf8;
+  --color-info-content: #041a2b;
+  --color-success: #34d399;
+  --color-success-content: #032318;
+  --color-warning: #fbbf24;
+  --color-warning-content: #261a02;
+  --color-error: #f87171;
+  --color-error-content: #2b0707;
   --radius-selector: 0.5rem;
-  --radius-field: 0.5rem;
-  --radius-box: 0.75rem;
+  --radius-field: 0.625rem;
+  --radius-box: 0.875rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   --border: 1px;
-  --depth: 0;
+  --depth: 1;
   --noise: 0;
-  --ev-muted: #a0a8b8; /* secondary text */
-  --ev-subtle: #8a93a6; /* metadata (lightened from #737D90 to keep 4.5:1 contrast on surfaces) */
-  --ev-surface-sunken: #1b202b; /* secondary surface: code, previews */
-  --ev-sidebar: #10131a;
+  --ev-muted: #a6aabb; /* secondary text (7.9:1 on cards) */
+  --ev-subtle: #8d92a5; /* metadata (5.9:1 on cards) */
+  --ev-surface-sunken: #181a24; /* secondary surface: code, previews */
+  --ev-sidebar: #0e0f16;
+  --ev-shadow: 0 1px 0 rgb(255 255 255 / 0.035) inset, 0 1px 2px rgb(0 0 0 / 0.45), 0 10px 28px -14px rgb(0 0 0 / 0.7);
+  --ev-shadow-hover: 0 1px 0 rgb(255 255 255 / 0.05) inset, 0 18px 40px -18px rgb(0 0 0 / 0.8),
+    0 0 0 1px rgb(139 143 249 / 0.18);
+  --ev-backdrop: radial-gradient(1100px 520px at 12% -12%, rgb(99 102 241 / 0.13), transparent 60%),
+    radial-gradient(900px 480px at 100% -5%, rgb(167 139 250 / 0.08), transparent 55%);
+  --ev-brand: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
 }
 
 @plugin "daisyui/theme" {
@@ -54,36 +60,42 @@
   color-scheme: light;
   --color-base-100: #ffffff;
   --color-base-200: #f6f7fb;
-  --color-base-300: #e2e6ef;
-  --color-base-content: #151a26;
-  --color-primary: #5157e0;
+  --color-base-300: #e3e5ee;
+  --color-base-content: #12141c;
+  --color-primary: #4f46e5; /* indigo */
   --color-primary-content: #ffffff;
-  --color-secondary: #1a8fc0;
+  --color-secondary: #7c3aed; /* violet */
   --color-secondary-content: #ffffff;
-  --color-accent: #1a8fc0;
+  --color-accent: #7c3aed;
   --color-accent-content: #ffffff;
-  --color-neutral: #10131a;
-  --color-neutral-content: #f4f6fb;
-  --color-info: #1a8fc0;
+  --color-neutral: #12141c;
+  --color-neutral-content: #f8f9fc;
+  --color-info: #0369a1;
   --color-info-content: #ffffff;
-  --color-success: #16805f;
+  --color-success: #047857;
   --color-success-content: #ffffff;
-  --color-warning: #a8701a;
+  --color-warning: #b45309;
   --color-warning-content: #ffffff;
-  --color-error: #c43c48;
+  --color-error: #c81e1e;
   --color-error-content: #ffffff;
   --radius-selector: 0.5rem;
-  --radius-field: 0.5rem;
-  --radius-box: 0.75rem;
+  --radius-field: 0.625rem;
+  --radius-box: 0.875rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   --border: 1px;
-  --depth: 0;
+  --depth: 1;
   --noise: 0;
-  --ev-muted: #5a6478;
-  --ev-subtle: #667085;
-  --ev-surface-sunken: #f0f2f8;
-  --ev-sidebar: #ffffff;
+  --ev-muted: #4a5060;
+  --ev-subtle: #5d6273;
+  --ev-surface-sunken: #f1f2f7;
+  --ev-sidebar: #fbfbfe;
+  --ev-shadow: 0 1px 2px rgb(18 20 28 / 0.05), 0 6px 18px -10px rgb(18 20 28 / 0.12);
+  --ev-shadow-hover: 0 2px 4px rgb(18 20 28 / 0.05), 0 18px 36px -16px rgb(79 70 229 / 0.22),
+    0 0 0 1px rgb(79 70 229 / 0.12);
+  --ev-backdrop: radial-gradient(1100px 520px at 12% -12%, rgb(79 70 229 / 0.07), transparent 60%),
+    radial-gradient(900px 480px at 100% -5%, rgb(124 58 237 / 0.05), transparent 55%);
+  --ev-brand: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
 }
 
 @theme inline {
@@ -101,6 +113,10 @@
   }
   body {
     @apply bg-base-200 text-base-content antialiased;
+    /* A soft, static wash of colour at the top of the page (no animation). */
+    background-image: var(--ev-backdrop);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     font-size: 15px;
     line-height: 1.6;
   }
@@ -108,6 +124,9 @@
     body {
       font-size: 16px;
     }
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--color-primary) 30%, transparent);
   }
   :focus-visible {
     outline: 2px solid var(--color-primary);
@@ -146,6 +165,18 @@
   }
   .surface {
     @apply rounded-box border border-base-300 bg-base-100;
+    box-shadow: var(--ev-shadow);
+  }
+  /* Solid brand gradient (logo tile, avatar, highlights). */
+  .bg-brand {
+    background-image: var(--ev-brand);
+  }
+  /* Text with the brand gradient (headings on the landing page). */
+  .text-gradient {
+    background: linear-gradient(100deg, var(--color-primary), var(--color-accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 }
 
@@ -260,8 +291,8 @@
     border-color 0.2s;
 }
 .lift:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 24px -16px rgb(0 0 0 / 0.55);
+  transform: translateY(-2px);
+  box-shadow: var(--ev-shadow-hover);
 }
 
 /* Buttons give a small "press" when clicked. */
@@ -275,6 +306,22 @@
 }
 .btn:active:not(:disabled) {
   transform: scale(0.97);
+}
+/* Primary buttons: a subtle top-to-bottom sheen and a soft coloured shadow. */
+.btn-primary:not(.btn-soft):not(.btn-outline):not(.btn-ghost) {
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0));
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.15), 0 6px 16px -6px color-mix(in oklab, var(--color-primary) 60%, transparent);
+}
+.btn-primary:not(.btn-soft):not(.btn-outline):not(.btn-ghost):hover {
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.15), 0 10px 22px -8px color-mix(in oklab, var(--color-primary) 70%, transparent);
+}
+/* Inputs: a clear, standard focus ring. */
+.input:focus-within,
+.textarea:focus,
+.select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-primary) 25%, transparent);
+  outline: none;
 }
 
 /* Icons inside a hovered element nudge sideways (e.g. "View all →"). */
@@ -343,6 +390,7 @@ dialog[open] .slide-in-left {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;

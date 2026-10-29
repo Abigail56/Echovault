@@ -5,7 +5,9 @@ rejected: they can contain scripts that would run if the file were opened in
 a browser.
 """
 
+import zipfile
 from dataclasses import dataclass
+from pathlib import Path, PurePath
 
 from app.models.attachment import FileKind
 
@@ -25,7 +27,24 @@ _SIGNATURES: list[tuple[bytes, DetectedType]] = [
     (b"%PDF-", DetectedType(FileKind.PDF, "application/pdf", "pdf")),
 ]
 
-ACCEPTED_DESCRIPTION = "PNG, JPEG, GIF or WebP images, PDF documents, or plain-text / Markdown / CSV files"
+ACCEPTED_DESCRIPTION = (
+    "images (PNG, JPEG, GIF, WebP), PDF, Word (.doc, .docx), Excel (.xls, .xlsx), "
+    "PowerPoint (.ppt, .pptx), RTF, or text files (.txt, .md, .csv)"
+)
+
+DOCX = DetectedType(FileKind.DOCUMENT, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx")
+XLSX = DetectedType(FileKind.DOCUMENT, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx")
+PPTX = DetectedType(FileKind.DOCUMENT, "application/vnd.openxmlformats-officedocument.presentationml.presentation", "pptx")
+RTF = DetectedType(FileKind.DOCUMENT, "application/rtf", "rtf")
+# Old (97-2003) Office files share one container format, so the extension says which it is.
+_LEGACY_OFFICE = {
+    ".doc": DetectedType(FileKind.DOCUMENT, "application/msword", "doc"),
+    ".xls": DetectedType(FileKind.DOCUMENT, "application/vnd.ms-excel", "xls"),
+    ".ppt": DetectedType(FileKind.DOCUMENT, "application/vnd.ms-powerpoint", "ppt"),
+}
+_ZIP = b"PK\x03\x04"
+_OLE = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
+_OOXML_PARTS = (("word/", DOCX), ("xl/", XLSX), ("ppt/", PPTX))
 
 _TEXT_MARKERS = (b"<svg", b"<!doctype html", b"<html", b"<script")
 
@@ -50,9 +69,43 @@ def detect_type(head: bytes) -> DetectedType | None:
             return detected
     if head[:4] == b"RIFF" and head[8:12] == b"WEBP":
         return DetectedType(FileKind.IMAGE, "image/webp", "webp")
+    if head.startswith(b"{\\rtf"):
+        return RTF
     if head and _looks_like_text(head):
         return DetectedType(FileKind.TEXT, "text/plain; charset=utf-8", "txt")
     return None
+
+
+def _detect_ooxml(path: Path) -> DetectedType | None:
+    """A .docx/.xlsx/.pptx is a ZIP of XML parts. Anything else in a ZIP is refused."""
+    try:
+        with zipfile.ZipFile(path) as archive:
+            infos = archive.infolist()
+            if len(infos) > 10_000:
+                return None
+            names = {i.filename for i in infos}
+            types = archive.getinfo("[Content_Types].xml")
+            if types.file_size > 1_000_000:
+                return None
+            manifest = archive.read(types).lower()
+    except (zipfile.BadZipFile, KeyError, OSError, RuntimeError):
+        return None
+    # Macro-enabled files (.docm, .xlsm, .pptm) can carry code; never accept them, even renamed.
+    if b"macroenabled" in manifest or any(n.lower().endswith("vbaproject.bin") for n in names):
+        return None
+    for prefix, detected in _OOXML_PARTS:
+        if any(n.startswith(prefix) for n in names):
+            return detected
+    return None
+
+
+def detect_file(path: Path, head: bytes, original_name: str | None) -> DetectedType | None:
+    """Like detect_type, but also recognises Office files (which need the whole file or its name)."""
+    if head.startswith(_ZIP):
+        return _detect_ooxml(path)
+    if head.startswith(_OLE):
+        return _LEGACY_OFFICE.get(PurePath(original_name or "").suffix.lower())
+    return detect_type(head)
 
 
 def clean_filename(name: str | None, fallback_extension: str) -> str:

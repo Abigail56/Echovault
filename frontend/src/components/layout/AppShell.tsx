@@ -42,8 +42,8 @@ function NavLinks({ collapsed = false, onNavigate }: { collapsed?: boolean; onNa
   const linkClass = (active: boolean) =>
     `flex items-center gap-3 rounded-field px-3 py-2 text-sm font-medium transition-all duration-200 ${
       active
-        ? "bg-primary/15 text-primary font-semibold shadow-[inset_3px_0_0_var(--color-primary)]"
-        : "text-muted hover:bg-base-200 hover:text-base-content hover:translate-x-0.5"
+        ? "bg-primary/12 text-primary font-semibold shadow-[inset_3px_0_0_var(--color-primary)]"
+        : "text-muted hover:bg-base-content/5 hover:text-base-content hover:translate-x-0.5"
     } ${collapsed ? "justify-center px-0" : ""}`;
 
   return (
@@ -175,7 +175,7 @@ function UserMenu() {
   return (
     <div className="dropdown dropdown-end">
       <div tabIndex={0} role="button" className="btn btn-ghost btn-sm btn-circle" aria-label="Account menu">
-        <span className="bg-primary text-primary-content grid size-8 place-items-center rounded-full text-xs font-semibold">
+        <span className="bg-brand grid size-8 place-items-center rounded-full text-xs font-semibold text-white ring-2 ring-base-100">
           {initials || <UserIcon className="size-4" aria-hidden />}
         </span>
       </div>
@@ -303,7 +303,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="border-base-300 bg-base-200/85 sticky top-0 z-20 flex h-14 items-center gap-2 border-b px-4 backdrop-blur sm:gap-3 sm:px-6">
+        <header className="border-base-300/80 bg-base-200/80 sticky top-0 z-20 flex h-14 items-center gap-2 border-b px-4 backdrop-blur sm:gap-3 sm:px-6">
           <MobileNav />
           <HeaderSearch />
           <div className="ml-auto flex items-center gap-1 sm:gap-2">

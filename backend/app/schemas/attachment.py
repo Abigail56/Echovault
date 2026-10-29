@@ -41,4 +41,5 @@ class StorageUsage(BaseModel):
     used_bytes: int
     quota_bytes: int
     max_file_bytes: int
+    max_files_per_note: int
     ocr_available: bool

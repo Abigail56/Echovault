@@ -24,7 +24,7 @@ from app.models import Attachment, ExtractionStatus, FileKind, KnowledgeItem
 from app.services.errors import InvalidInputError, NotFoundError
 from app.services.extraction import extract
 from app.services.search_vectors import attachment_vector
-from app.services.file_types import ACCEPTED_DESCRIPTION, clean_filename, detect_type
+from app.services.file_types import ACCEPTED_DESCRIPTION, clean_filename, detect_file
 
 logger = logging.getLogger(__name__)
 CHUNK = 1024 * 1024
@@ -105,7 +105,7 @@ def save_upload(
                 out.write(chunk)
         if size == 0:
             raise InvalidInputError("The file is empty")
-        detected = detect_type(head)
+        detected = detect_file(target, head, original_name)
         if detected is None:
             raise InvalidInputError(f"This file type isn't supported. Upload {ACCEPTED_DESCRIPTION}.")
         if detected.kind == FileKind.IMAGE:
@@ -141,7 +141,7 @@ def run_extraction(attachment_id: uuid.UUID) -> None:
         if attachment is None:
             return
         path = file_path(attachment)
-        result = extract(path, FileKind(attachment.kind)) if path.exists() else None
+        result = extract(path, FileKind(attachment.kind), attachment.content_type) if path.exists() else None
         # OCR can take a while; the user may have deleted the file or note meanwhile.
         updated = db.exec(
             update(Attachment)

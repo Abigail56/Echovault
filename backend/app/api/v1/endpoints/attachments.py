@@ -44,6 +44,7 @@ def storage_usage(db: DbSession, owner_id: OwnerId) -> StorageUsage:
         used_bytes=attachment_service.storage_used(db, owner_id),
         quota_bytes=settings.USER_STORAGE_QUOTA_BYTES,
         max_file_bytes=settings.MAX_UPLOAD_BYTES,
+        max_files_per_note=settings.MAX_ATTACHMENTS_PER_NOTE,
         ocr_available=ocr_available(),
     )
 

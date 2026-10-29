@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, PencilLine } from "lucide-react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 
 import { RelatedNotesPicker } from "@/components/knowledge/RelatedNotesPicker";
@@ -23,9 +23,22 @@ interface KnowledgeFormProps {
   submitLabel: string;
   onSubmit: (values: KnowledgeValues) => Promise<void>;
   onCancel: () => void;
+  /** Extra content shown above the Save button (e.g. the attachment picker). */
+  children?: ReactNode;
+  /** Unsaved changes outside the form fields (e.g. files chosen but not uploaded). */
+  extraDirty?: boolean;
 }
 
-export function KnowledgeForm({ initial, noteId, initialRelated, submitLabel, onSubmit, onCancel }: KnowledgeFormProps) {
+export function KnowledgeForm({
+  initial,
+  noteId,
+  initialRelated,
+  submitLabel,
+  onSubmit,
+  onCancel,
+  children,
+  extraDirty = false,
+}: KnowledgeFormProps) {
   const [formError, setFormError] = useState<string | null>(null);
   const [preview, setPreview] = useState(false);
   const {
@@ -39,7 +52,7 @@ export function KnowledgeForm({ initial, noteId, initialRelated, submitLabel, on
     resolver: zodResolver(knowledgeSchema),
     defaultValues: { title: "", content: "", tags: [], project_id: null, related_ids: [], ...initial },
   });
-  useUnsavedChanges(isDirty && !isSubmitting);
+  useUnsavedChanges((isDirty || extraDirty) && !isSubmitting);
   const content = useWatch({ control, name: "content" });
 
   const submit = handleSubmit(async (values) => {
@@ -114,8 +127,10 @@ export function KnowledgeForm({ initial, noteId, initialRelated, submitLabel, on
         )}
       </Field>
 
+      {children}
+
       <div className="border-base-300 flex flex-col-reverse gap-2 border-t pt-5 sm:flex-row sm:justify-end">
-        <SaveStatus dirty={isDirty} saving={isSubmitting} existing={Boolean(noteId)} />
+        <SaveStatus dirty={isDirty || extraDirty} saving={isSubmitting} existing={Boolean(noteId)} />
         <button type="button" className="btn btn-ghost" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </button>

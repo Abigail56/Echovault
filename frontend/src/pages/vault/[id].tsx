@@ -1,10 +1,10 @@
-import { Archive, ArchiveRestore, BookOpen, CalendarClock, FolderKanban, Link2, PencilLine, Scale, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, BookOpen, Paperclip, CalendarClock, FolderKanban, Link2, PencilLine, Scale, Trash2 } from "lucide-react";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
 
-import { AttachmentPanel } from "@/components/attachments/AttachmentPanel";
+import { ATTACH_INPUT_ID, AttachmentPanel, openPickerOnKey } from "@/components/attachments/AttachmentPanel";
 import { KnowledgeForm } from "@/components/knowledge/KnowledgeForm";
 import { appLayout } from "@/components/layout/AppShell";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -16,7 +16,7 @@ import { useAsync } from "@/hooks/useAsync";
 import { useToast } from "@/hooks/useToast";
 import { errorMessage } from "@/lib/api/client";
 import { decisionsApi, knowledgeApi } from "@/lib/api/services";
-import { formatDate, formatDateTime, queryParam } from "@/lib/format";
+import { formatDate, formatDateTime, isUuid, queryParam } from "@/lib/format";
 import type { PageWithLayout } from "@/lib/layout";
 
 function MetaSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -62,15 +62,31 @@ const KnowledgeDetailPage: PageWithLayout = () => {
 
   // Appends text read from an attachment to the end of the note.
   const addToNote = async (text: string, filename: string) => {
-    const current = item.data?.content.trimEnd() ?? "";
     const block = `### From ${filename}\n\n${text.trim()}`;
     try {
+      // Re-read the note first so several additions in a row never overwrite each other.
+      const current = (await knowledgeApi.get(id)).content.trimEnd();
       item.setData(await knowledgeApi.update(id, { content: current ? `${current}\n\n${block}` : block }));
-      toast.success("Text added to the note");
+      toast.success(`Text from ${filename} added to the note`);
     } catch (error) {
       toast.error(errorMessage(error));
     }
   };
+
+  // While editing, the form holds unsaved text, so copy instead of saving over it.
+  const copyForEditing = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text.trim());
+      toast.success("Text copied. Paste it into the content box with Ctrl+V.");
+    } catch {
+      toast.error("Couldn't copy. Select the text and copy it manually.");
+    }
+  };
+
+  // Set by the New note page when "Put the text from these files into the note" was ticked.
+  const autoAddIds = queryParam(router.query.autotext).split(",").filter(isUuid);
+  const clearAutoAdd = () =>
+    void router.replace({ pathname: router.pathname, query: { id } }, undefined, { shallow: true });
 
   const remove = async () => {
     setDeleting(true);
@@ -99,20 +115,32 @@ const KnowledgeDetailPage: PageWithLayout = () => {
         title={editing ? "Edit note" : k.title}
         breadcrumbs={[{ label: "Vault", href: archived ? "/vault?view=archived" : "/vault" }, { label: k.title }]}
         actions={
-          !editing && (
-            <>
-              <button type="button" className="btn btn-sm" onClick={() => setEditing(true)}>
-                <PencilLine className="size-4" aria-hidden /> Edit
-              </button>
-              <button type="button" className="btn btn-sm btn-ghost" onClick={() => toggleArchive(!archived)} disabled={archiving}>
-                {archived ? <ArchiveRestore className="size-4" aria-hidden /> : <Archive className="size-4" aria-hidden />}
-                {archived ? "Restore" : "Archive"}
-              </button>
-              <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => setConfirming(true)}>
-                <Trash2 className="size-4" aria-hidden /> Delete
-              </button>
-            </>
-          )
+          <>
+            <label
+              htmlFor={ATTACH_INPUT_ID}
+              role="button"
+              tabIndex={0}
+              onKeyDown={openPickerOnKey}
+              className="btn btn-sm btn-primary"
+              onClick={() => document.getElementById("attachments")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            >
+              <Paperclip className="size-4" aria-hidden /> Attach files
+            </label>
+            {!editing && (
+              <>
+                <button type="button" className="btn btn-sm" onClick={() => setEditing(true)}>
+                  <PencilLine className="size-4" aria-hidden /> Edit
+                </button>
+                <button type="button" className="btn btn-sm btn-ghost" onClick={() => toggleArchive(!archived)} disabled={archiving}>
+                  {archived ? <ArchiveRestore className="size-4" aria-hidden /> : <Archive className="size-4" aria-hidden />}
+                  {archived ? "Restore" : "Archive"}
+                </button>
+                <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => setConfirming(true)}>
+                  <Trash2 className="size-4" aria-hidden /> Delete
+                </button>
+              </>
+            )}
+          </>
         }
       />
 
@@ -141,7 +169,9 @@ const KnowledgeDetailPage: PageWithLayout = () => {
             }}
           />
         </div>
-      ) : (
+      ) : null}
+      {editing && <AttachmentPanel key={`edit-${k.id}`} noteId={k.id} initial={k.attachments} onAddToNote={copyForEditing} />}
+      {!editing && (
         <>
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_17rem]">
             <article className="surface min-w-0 p-5 sm:p-8">
@@ -212,7 +242,14 @@ const KnowledgeDetailPage: PageWithLayout = () => {
             </aside>
           </div>
 
-          <AttachmentPanel key={k.id} noteId={k.id} initial={k.attachments} onAddToNote={addToNote} />
+          <AttachmentPanel
+            key={k.id}
+            noteId={k.id}
+            initial={k.attachments}
+            onAddToNote={addToNote}
+            autoAddIds={autoAddIds}
+            onAutoAddDone={clearAutoAdd}
+          />
 
           <section className="mt-6" aria-labelledby="connections-heading">
             <h2 id="connections-heading" className="text-section mb-3">

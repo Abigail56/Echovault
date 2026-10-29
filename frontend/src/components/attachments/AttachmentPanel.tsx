@@ -1,4 +1,4 @@
-import { Download, FileText, FileType2, ImageIcon, Paperclip, RotateCw, ScanText, Trash2, UploadCloud } from "lucide-react";
+import { Download, FileSpreadsheet, FileText, FileType2, ImageIcon, Presentation, Paperclip, RotateCw, ScanText, Trash2, UploadCloud } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -6,12 +6,23 @@ import { useToast } from "@/hooks/useToast";
 import { errorMessage } from "@/lib/api/client";
 import { attachmentsApi } from "@/lib/api/services";
 import type { Attachment, StorageUsage, UUID } from "@/lib/api/types";
+import { ACCEPT, familyOf } from "@/lib/attachments";
 import { formatBytes } from "@/lib/format";
 
 import { ExtractionBadge } from "./ExtractionBadge";
 import { TextViewer } from "./TextViewer";
 
-export const ACCEPT = "image/png,image/jpeg,image/gif,image/webp,application/pdf,text/plain,text/markdown,text/csv,.md,.txt,.csv";
+/** The panel's hidden file input; the "Attach files" header button opens it. */
+export const ATTACH_INPUT_ID = "attachment-file-input";
+
+/** Space/Enter on a <label> doesn't open the picker by default; make it keyboard-friendly. */
+export function openPickerOnKey(event: React.KeyboardEvent) {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    document.getElementById(ATTACH_INPUT_ID)?.click();
+  }
+}
+
 const POLL_MS = 2000;
 const POLL_LIMIT = 90; // about three minutes
 const STUCK_AFTER_MS = 2 * 60_000;
@@ -36,8 +47,10 @@ export function screenshotName(file: File, now = new Date()): string {
   return `screenshot-${stamp}.${ext}`;
 }
 
-function KindIcon({ kind }: { kind: Attachment["kind"] }) {
-  const Icon = kind === "image" ? ImageIcon : kind === "pdf" ? FileType2 : FileText;
+function KindIcon({ kind, filename }: { kind: Attachment["kind"]; filename: string }) {
+  const family = familyOf(filename);
+  const Icon =
+    kind === "image" ? ImageIcon : kind === "pdf" ? FileType2 : family === "spreadsheet" ? FileSpreadsheet : family === "presentation" ? Presentation : FileText;
   return <Icon className="text-muted size-6" aria-hidden />;
 }
 
@@ -46,9 +59,13 @@ interface AttachmentPanelProps {
   initial: Attachment[];
   /** Appends text to the note (used by "Add to note" in the text viewer). */
   onAddToNote: (text: string, filename: string) => Promise<void>;
+  /** Attachments whose text should be added to the note automatically once it has been read. */
+  autoAddIds?: string[];
+  /** Called when every auto-add attachment has been handled. */
+  onAutoAddDone?: () => void;
 }
 
-export function AttachmentPanel({ noteId, initial, onAddToNote }: AttachmentPanelProps) {
+export function AttachmentPanel({ noteId, initial, onAddToNote, autoAddIds, onAutoAddDone }: AttachmentPanelProps) {
   const toast = useToast();
   const [items, setItems] = useState<Attachment[]>(initial);
   const [uploading, setUploading] = useState<Uploading[]>([]);
@@ -57,7 +74,6 @@ export function AttachmentPanel({ noteId, initial, onAddToNote }: AttachmentPane
   const [viewing, setViewing] = useState<Attachment | null>(null);
   const [deleting, setDeleting] = useState<Attachment | null>(null);
   const [busyDelete, setBusyDelete] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
   const keyRef = useRef(0);
 
   const closeViewer = useCallback(() => setViewing(null), []);
@@ -103,6 +119,32 @@ export function AttachmentPanel({ noteId, initial, onAddToNote }: AttachmentPane
     [noteId, refreshUsage, toast, usage],
   );
 
+  // Text from files chosen with "Put the text into the note" is added as soon as it's read.
+  const autoRemaining = useRef(new Set(autoAddIds ?? []));
+  const autoBusy = useRef(false);
+  useEffect(() => {
+    if (autoBusy.current || autoRemaining.current.size === 0) return;
+    const ready = items.filter((a) => autoRemaining.current.has(a.id) && a.extraction_status !== "pending");
+    const gone = [...autoRemaining.current].filter((id) => !items.some((a) => a.id === id));
+    if (!ready.length && !gone.length) return;
+    autoBusy.current = true;
+    void (async () => {
+      for (const id of gone) autoRemaining.current.delete(id);
+      for (const a of ready) {
+        autoRemaining.current.delete(a.id);
+        if (a.text_chars === 0) continue;
+        try {
+          const detail = await attachmentsApi.get(a.id);
+          await onAddToNote(detail.extracted_text, a.filename);
+        } catch (error) {
+          toast.error(`${a.filename}: ${errorMessage(error)}`);
+        }
+      }
+      autoBusy.current = false;
+      if (autoRemaining.current.size === 0) onAutoAddDone?.();
+    })();
+  }, [items, onAddToNote, onAutoAddDone, toast]);
+
   // Ctrl+V / Cmd+V anywhere on the page attaches a copied screenshot.
   useEffect(() => {
     const onPaste = (event: ClipboardEvent) => {
@@ -141,7 +183,7 @@ export function AttachmentPanel({ noteId, initial, onAddToNote }: AttachmentPane
   };
 
   return (
-    <section className="mt-6" aria-labelledby="attachments-heading">
+    <section id="attachments" className="mt-6 scroll-mt-20" aria-labelledby="attachments-heading">
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="attachments-heading" className="text-section flex items-center gap-2">
           <Paperclip className="size-4" aria-hidden /> Attachments
@@ -169,15 +211,21 @@ export function AttachmentPanel({ noteId, initial, onAddToNote }: AttachmentPane
         data-testid="attachment-dropzone"
       >
         <UploadCloud className="text-primary mx-auto size-8" aria-hidden />
-        <p className="mt-2 text-sm">
-          Drop files here,{" "}
-          <button type="button" className="link link-primary" onClick={() => inputRef.current?.click()}>
-            choose files
-          </button>
-          , or paste a screenshot with <kbd className="kbd kbd-sm">Ctrl</kbd>+<kbd className="kbd kbd-sm">V</kbd>
+        {/* A <label> opens the file picker natively: no script needed, so it works in every browser. */}
+        <label
+          htmlFor={ATTACH_INPUT_ID}
+          role="button"
+          tabIndex={0}
+          onKeyDown={openPickerOnKey}
+          className="btn btn-primary mt-3"
+        >
+          <Paperclip className="size-4" aria-hidden /> Choose files from your computer
+        </label>
+        <p className="text-muted mt-3 text-sm">
+          or drag files here, or paste a screenshot with <kbd className="kbd kbd-sm">Ctrl</kbd>+<kbd className="kbd kbd-sm">V</kbd>
         </p>
         <p className="text-meta mt-1">
-          Images, PDFs and text files{usage ? `, up to ${formatBytes(usage.max_file_bytes)} each` : ""}. Text inside them is
+          Images, PDFs, Word, Excel, PowerPoint and text files{usage ? `, up to ${formatBytes(usage.max_file_bytes)} each` : ""}. Text inside them is
           extracted so you can search it and ask the assistant about it.
         </p>
         {usage && !usage.ocr_available && (
@@ -187,7 +235,7 @@ export function AttachmentPanel({ noteId, initial, onAddToNote }: AttachmentPane
           </p>
         )}
         <input
-          ref={inputRef}
+          id={ATTACH_INPUT_ID}
           type="file"
           multiple
           accept={ACCEPT}
@@ -215,7 +263,7 @@ export function AttachmentPanel({ noteId, initial, onAddToNote }: AttachmentPane
                   // eslint-disable-next-line @next/next/no-img-element -- private, cookie-authenticated file
                   <img src={attachmentsApi.fileUrl(a.id)} alt="" className="size-full object-cover" loading="lazy" />
                 ) : (
-                  <KindIcon kind={a.kind} />
+                  <KindIcon kind={a.kind} filename={a.filename} />
                 )}
               </a>
               <div className="min-w-0 flex-1">
