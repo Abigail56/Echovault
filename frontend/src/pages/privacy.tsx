@@ -2,6 +2,7 @@ import Head from "next/head";
 import Link from "next/link";
 
 import { LegalLayout } from "@/components/layout/PublicLayout";
+import { EmailLink } from "@/components/ui/EmailLink";
 import { OPERATOR } from "@/lib/legal";
 
 export default function PrivacyPage() {
@@ -23,7 +24,7 @@ export default function PrivacyPage() {
         <h2 id="who">1. Who is responsible</h2>
         <p>
           EchoVault Nexus is operated by {OPERATOR.name}, {OPERATOR.address} (&quot;we&quot;, &quot;us&quot;). For privacy questions or
-          requests, contact {OPERATOR.privacyEmail}.
+          requests, contact <EmailLink address={OPERATOR.privacyEmail} subject="Privacy request" />.
         </p>
 
         <h2 id="collect">2. What we collect</h2>
@@ -120,13 +121,14 @@ export default function PrivacyPage() {
         <h2 id="rights">7. Your rights and choices</h2>
         <ul>
           <li>
-            <strong>Access and correction:</strong> view and edit your content and name at any time in the app.
+            <strong>Access and correction:</strong> view and edit your content, name and email address at any time in the app.
           </li>
           <li>
             <strong>Deletion:</strong> delete individual records, or your whole account from <Link href="/settings">Settings</Link>.
           </li>
           <li>
-            <strong>Export:</strong> a self-service export is not available yet; contact {OPERATOR.privacyEmail} for a copy of your data.
+            <strong>Export:</strong> download a copy of everything stored for your account as a JSON file from{" "}
+            <Link href="/settings">Settings → Your data</Link>.
           </li>
           <li>
             Depending on where you live, you may also have rights to object, restrict processing, and complain to a data-protection

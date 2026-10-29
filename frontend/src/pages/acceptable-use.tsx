@@ -1,6 +1,7 @@
 import Head from "next/head";
 
 import { LegalLayout } from "@/components/layout/PublicLayout";
+import { EmailLink } from "@/components/ui/EmailLink";
 import { OPERATOR } from "@/lib/legal";
 
 export default function AcceptableUsePage() {
@@ -33,7 +34,7 @@ export default function AcceptableUsePage() {
 
         <h2 id="disclosure">Responsible disclosure</h2>
         <p>
-          If you find a security vulnerability, please report it to {OPERATOR.contactEmail} with enough detail to reproduce it, and give us
+          If you find a security vulnerability, please report it to <EmailLink address={OPERATOR.contactEmail} subject="Security report" /> with enough detail to reproduce it, and give us
           reasonable time to fix it before disclosing it publicly. Do not access or modify other users&apos; data while investigating.
         </p>
       </LegalLayout>

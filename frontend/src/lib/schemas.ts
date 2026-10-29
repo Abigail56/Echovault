@@ -77,3 +77,6 @@ export const decisionSchema = z.object({
   project_id: z.string().nullable(),
 });
 export type DecisionValues = z.infer<typeof decisionSchema>;
+
+export const changeEmailSchema = z.object({ new_email: email, password: z.string().min(1, "Enter your password") });
+export type ChangeEmailValues = z.infer<typeof changeEmailSchema>;

@@ -1,4 +1,4 @@
-import { Bot, CheckCircle2, FileText, LogOut, Monitor, Moon, Palette, ShieldCheck, Sun, TriangleAlert, XCircle } from "lucide-react";
+import { Bot, CheckCircle2, Download, FileText, LogOut, Monitor, Moon, Palette, ShieldCheck, Sun, TriangleAlert, XCircle } from "lucide-react";
 import Link from "next/link";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -14,6 +14,7 @@ import { type ThemePreference, useTheme } from "@/hooks/useTheme";
 import { useToast } from "@/hooks/useToast";
 import { errorMessage } from "@/lib/api/client";
 import { assistantApi, authApi } from "@/lib/api/services";
+import { downloadJson } from "@/lib/download";
 import { formatDate } from "@/lib/format";
 import type { PageWithLayout } from "@/lib/layout";
 
@@ -57,6 +58,20 @@ const SettingsPage: PageWithLayout = () => {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  const exportData = async () => {
+    setExporting(true);
+    try {
+      const data = await authApi.exportData();
+      downloadJson(data, `echovault-export-${new Date().toISOString().slice(0, 10)}.json`);
+      toast.success("Your data export has been downloaded");
+    } catch (error) {
+      toast.error(errorMessage(error));
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const signOutEverywhere = async () => {
     setBusy(true);
@@ -131,6 +146,18 @@ const SettingsPage: PageWithLayout = () => {
             </button>
           </div>
         </Section>
+        <Section icon={Download} title="Your data" description="A copy of everything stored for your account.">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm">
+              Download your account details, notes (including archived), tags, related-note links, projects and decisions as a JSON file.
+            </p>
+            <button type="button" className="btn btn-sm btn-outline border-base-300 shrink-0" onClick={exportData} disabled={exporting}>
+              {exporting ? <span className="loading loading-spinner loading-xs" aria-hidden /> : <Download className="size-4" aria-hidden />}
+              Download my data
+            </button>
+          </div>
+        </Section>
+
         <Section icon={FileText} title="Legal" description="The documents that apply to your account.">
           <p className="text-sm">
             {user?.terms_accepted_at ? (

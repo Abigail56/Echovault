@@ -33,6 +33,9 @@ export const authApi = {
   logout: () => api.post<void>("/auth/logout", undefined, { noRefresh: true }),
   logoutEverywhere: () => api.post<void>("/auth/logout-all"),
   deleteAccount: (password: string) => api.post<void>("/auth/delete-account", { password }),
+  changeEmail: (new_email: string, password: string) => api.post<User>("/auth/change-email", { new_email, password }),
+  acceptTerms: (terms_version: string) => api.post<User>("/auth/accept-terms", { terms_version }),
+  exportData: () => api.get<Record<string, unknown>>("/auth/export"),
   updateProfile: (body: { full_name: string }) => api.patch<User>("/auth/me", body),
   changePassword: (body: { current_password: string; new_password: string }) =>
     api.post<void>("/auth/change-password", body),

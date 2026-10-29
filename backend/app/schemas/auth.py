@@ -77,5 +77,14 @@ class AuthConfig(BaseModel):
     terms_version: str
 
 
+class ChangeEmailRequest(BaseModel):
+    new_email: NormalisedEmail
+    password: str = Field(min_length=1, max_length=256)
+
+
+class AcceptTermsRequest(BaseModel):
+    terms_version: str = Field(min_length=1, max_length=32)
+
+
 class DeleteAccountRequest(BaseModel):
     password: str = Field(min_length=1, max_length=256)

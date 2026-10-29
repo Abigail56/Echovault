@@ -18,6 +18,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 
+import { TermsUpdateGate } from "@/components/layout/TermsUpdateGate";
 import { Logo, LogoMark } from "@/components/ui/Logo";
 import { FullPageSpinner } from "@/components/ui/States";
 import { useAuth } from "@/hooks/useAuth";
@@ -315,6 +316,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div key={router.pathname} className="animate-page-in">
             {children}
           </div>
+          <TermsUpdateGate />
         </main>
       </div>
     </div>
