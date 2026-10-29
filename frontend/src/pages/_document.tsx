@@ -8,9 +8,10 @@ export default function Document() {
       <Head>
         <meta
           name="description"
-          content="EchoVault Nexus: capture ideas, organise projects, record decisions and rediscover what you know."
+          content="EchoVault Nexus: capture what you learn, organise your projects and preserve the reasoning behind your decisions."
         />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+        <meta name="theme-color" content="#0B0D12" />
         {/* Static, trusted script: applies the saved theme before first paint. */}
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </Head>

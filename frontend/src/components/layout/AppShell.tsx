@@ -23,11 +23,10 @@ import { FullPageSpinner } from "@/components/ui/States";
 import { useAuth } from "@/hooks/useAuth";
 
 const NAV = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/vault", label: "Knowledge Vault", icon: BookOpen },
+  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+  { href: "/vault", label: "Vault", icon: BookOpen },
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/decisions", label: "Decisions", icon: Scale },
-  { href: "/search", label: "Search", icon: Search },
   { href: "/assistant", label: "Assistant", icon: Bot },
 ];
 
@@ -54,9 +53,9 @@ function NavLinks({ collapsed = false, onNavigate }: { collapsed?: boolean; onNa
           <Link
             key={href}
             href={href}
-            className={linkClass(active)}
+            className={`${linkClass(active)} ${collapsed ? "tooltip tooltip-right" : ""}`}
+            data-tip={collapsed ? label : undefined}
             aria-current={active ? "page" : undefined}
-            title={collapsed ? label : undefined}
             onClick={onNavigate}
           >
             <Icon className="size-[18px] shrink-0" aria-hidden />
@@ -67,9 +66,9 @@ function NavLinks({ collapsed = false, onNavigate }: { collapsed?: boolean; onNa
       <div className="mt-auto pt-4">
         <Link
           href="/settings"
-          className={linkClass(isActive(pathname, "/settings"))}
+          className={`${linkClass(isActive(pathname, "/settings"))} ${collapsed ? "tooltip tooltip-right" : ""}`}
+          data-tip={collapsed ? "Settings" : undefined}
           aria-current={isActive(pathname, "/settings") ? "page" : undefined}
-          title={collapsed ? "Settings" : undefined}
           onClick={onNavigate}
         >
           <Settings className="size-[18px] shrink-0" aria-hidden />
@@ -101,7 +100,7 @@ function MobileNav() {
         <Menu className="size-5" aria-hidden />
       </button>
       <dialog ref={ref} className="modal justify-start lg:hidden" aria-label="Navigation">
-        <div className="bg-base-100 slide-in-left flex h-full w-72 max-w-[85vw] flex-col p-4 shadow-xl">
+        <div className="bg-sidebar slide-in-left flex h-full w-72 max-w-[85vw] flex-col p-4 shadow-xl">
           <div className="mb-6 flex items-center justify-between">
             <Logo href="/dashboard" />
             <button type="button" className="btn btn-ghost btn-square btn-sm" onClick={() => ref.current?.close()} aria-label="Close navigation">
@@ -276,7 +275,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         Skip to content
       </a>
       <aside
-        className={`border-base-300 bg-base-100 sticky top-0 hidden h-dvh shrink-0 flex-col border-r p-3 transition-[width] duration-200 lg:flex ${
+        className={`border-base-300 bg-sidebar sticky top-0 hidden h-dvh shrink-0 flex-col border-r p-3 transition-[width] duration-200 lg:flex ${
           collapsed ? "w-[4.25rem]" : "w-64"
         }`}
       >
@@ -303,7 +302,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="border-base-300 bg-base-100/90 sticky top-0 z-20 flex h-14 items-center gap-2 border-b px-4 backdrop-blur sm:gap-3 sm:px-6">
+        <header className="border-base-300 bg-base-200/85 sticky top-0 z-20 flex h-14 items-center gap-2 border-b px-4 backdrop-blur sm:gap-3 sm:px-6">
           <MobileNav />
           <HeaderSearch />
           <div className="ml-auto flex items-center gap-1 sm:gap-2">

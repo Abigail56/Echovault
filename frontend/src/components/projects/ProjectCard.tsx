@@ -7,7 +7,7 @@ import { formatDateTime, plural, timeAgo } from "@/lib/format";
 
 export function ProjectCard({ project }: { project: Project }) {
   return (
-    <article className="surface lift hover:border-primary/40 group relative flex flex-col p-5">
+    <article className="surface lift hover:border-primary/40 group relative flex min-w-0 flex-col p-5">
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-section min-w-0 break-words">
           <Link href={`/projects/${project.id}`} className="after:absolute after:inset-0 focus-visible:outline-none group-hover:text-primary">

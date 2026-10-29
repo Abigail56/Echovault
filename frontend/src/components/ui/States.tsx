@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import { CircleAlert, RefreshCw, WifiOff } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { LogoMark } from "@/components/ui/Logo";
 import { ApiError } from "@/lib/api/client";
 
 export function EmptyState({
@@ -88,7 +89,7 @@ export function DetailSkeleton() {
 export function FullPageSpinner({ label = "Loading" }: { label?: string }) {
   return (
     <div className="grid min-h-[50vh] place-items-center" role="status">
-      <span className="loading loading-spinner loading-md text-primary" aria-hidden />
+      <LogoMark className="size-9 animate-pulse" />
       <span className="sr-only">{label}</span>
     </div>
   );

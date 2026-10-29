@@ -6,14 +6,14 @@ import { formatDateTime, timeAgo } from "@/lib/format";
 
 export function KnowledgeCard({ item }: { item: KnowledgeSummary }) {
   return (
-    <article className="surface lift hover:border-primary/40 group relative p-5">
+    <article className="surface lift hover:border-primary/40 group relative min-w-0 p-5">
       <h3 className="text-section break-words">
         <Link href={`/vault/${item.id}`} className="after:absolute after:inset-0 focus-visible:outline-none group-hover:text-primary">
           {item.title}
         </Link>
       </h3>
       {item.excerpt ? (
-        <p className="text-muted mt-1.5 line-clamp-2 text-sm break-words">{item.excerpt}</p>
+        <p className="text-muted mt-1.5 line-clamp-2 text-sm [overflow-wrap:anywhere]">{item.excerpt}</p>
       ) : (
         <p className="text-muted mt-1.5 text-sm italic">No content yet</p>
       )}
@@ -21,6 +21,7 @@ export function KnowledgeCard({ item }: { item: KnowledgeSummary }) {
         <time dateTime={item.updated_at} title={formatDateTime(item.updated_at)}>
           Updated {timeAgo(item.updated_at)}
         </time>
+        {item.archived_at && <span className="badge badge-ghost badge-sm">Archived</span>}
         {item.project && (
           <span className="flex min-w-0 items-center gap-1">
             <FolderKanban className="size-3.5 shrink-0" aria-hidden />

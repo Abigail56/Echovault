@@ -11,7 +11,8 @@ interface AuthContextValue {
   user: User | null;
   status: Status;
   login: (email: string, password: string) => Promise<void>;
-  register: (fullName: string, email: string, password: string) => Promise<void>;
+  /** acceptedTermsVersion: the version of the Terms the user ticked to accept. */
+  register: (fullName: string, email: string, password: string, acceptedTermsVersion: string) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User) => void;
   /** Clear local state after the server has already ended the session. */
@@ -57,8 +58,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus("authenticated");
   }, []);
 
-  const register = useCallback(async (fullName: string, email: string, password: string) => {
-    const me = await authApi.register({ full_name: fullName, email, password });
+  const register = useCallback(async (fullName: string, email: string, password: string, acceptedTermsVersion: string) => {
+    const me = await authApi.register({
+      full_name: fullName,
+      email,
+      password,
+      accept_terms: true,
+      terms_version: acceptedTermsVersion,
+    });
     setUserState(me);
     setStatus("authenticated");
   }, []);

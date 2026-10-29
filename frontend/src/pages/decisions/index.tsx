@@ -3,6 +3,7 @@ import Head from "next/head";
 import Link from "next/link";
 
 import { DecisionCard } from "@/components/decisions/DecisionCard";
+import { DECISION_STATUSES } from "@/components/decisions/DecisionStatusBadge";
 import { appLayout } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Pagination } from "@/components/ui/Pagination";
@@ -12,23 +13,26 @@ import { EmptyState, ErrorState, ListSkeleton } from "@/components/ui/States";
 import { useAsync } from "@/hooks/useAsync";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 import { decisionsApi, type DecisionQuery } from "@/lib/api/services";
+import type { DecisionStatus } from "@/lib/api/types";
 import type { PageWithLayout } from "@/lib/layout";
 
 const PAGE_SIZE = 20;
 
 const DecisionsPage: PageWithLayout = () => {
-  const { values, update, offset, ready } = useUrlFilters(["q", "project", "order"] as const);
+  const { values, update, offset, ready } = useUrlFilters(["q", "project", "order", "status"] as const);
+  const status = DECISION_STATUSES.some((s) => s.value === values.status) ? (values.status as DecisionStatus) : undefined;
   const order = values.order === "asc" ? "asc" : "desc";
   const query: DecisionQuery = {
     q: values.q || undefined,
     project_id: values.project || undefined,
+    status,
     sort: "created_at",
     order,
     limit: PAGE_SIZE,
     offset,
   };
   const list = useAsync((signal) => decisionsApi.list(query, signal), [JSON.stringify(query)], ready);
-  const filtering = Boolean(values.q || values.project);
+  const filtering = Boolean(values.q || values.project || status);
 
   return (
     <>
@@ -45,9 +49,17 @@ const DecisionsPage: PageWithLayout = () => {
         }
       />
 
-      <div className="mb-5 grid gap-3 md:grid-cols-[1fr_12rem_11rem]">
+      <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_11rem_11rem_10rem]">
         <SearchInput value={values.q} onChange={(q) => update({ q })} label="Search decisions" placeholder="Search context, reasoning and outcomes" />
         <ProjectSelect value={values.project || null} onChange={(project) => update({ project })} aria-label="Filter by project" emptyLabel="All projects" />
+        <select className="select w-full" value={status ?? ""} onChange={(e) => update({ status: e.target.value || null })} aria-label="Filter by status">
+          <option value="">All statuses</option>
+          {DECISION_STATUSES.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
+            </option>
+          ))}
+        </select>
         <select className="select w-full" value={order} onChange={(e) => update({ order: e.target.value === "asc" ? "asc" : null })} aria-label="Sort order">
           <option value="desc">Newest first</option>
           <option value="asc">Oldest first</option>
@@ -65,7 +77,7 @@ const DecisionsPage: PageWithLayout = () => {
             title="No matching decisions"
             description="Try different keywords or another project."
             action={
-              <button type="button" className="btn btn-sm" onClick={() => update({ q: null, project: null })}>
+              <button type="button" className="btn btn-sm" onClick={() => update({ q: null, project: null, status: null })}>
                 Clear filters
               </button>
             }

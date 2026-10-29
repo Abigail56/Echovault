@@ -3,23 +3,29 @@ import { Eye, PencilLine } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 
+import { RelatedNotesPicker } from "@/components/knowledge/RelatedNotesPicker";
 import { Field } from "@/components/ui/Field";
 import { Markdown } from "@/components/ui/Markdown";
 import { ProjectSelect } from "@/components/ui/ProjectSelect";
+import { SaveStatus } from "@/components/ui/SaveStatus";
 import { InlineError } from "@/components/ui/States";
 import { TagInput } from "@/components/ui/TagInput";
 import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
+import type { KnowledgeRef } from "@/lib/api/types";
 import { applyServerErrors } from "@/lib/forms";
 import { knowledgeSchema, type KnowledgeValues } from "@/lib/schemas";
 
 interface KnowledgeFormProps {
   initial?: Partial<KnowledgeValues>;
+  /** Set when editing an existing note. */
+  noteId?: string;
+  initialRelated?: KnowledgeRef[];
   submitLabel: string;
   onSubmit: (values: KnowledgeValues) => Promise<void>;
   onCancel: () => void;
 }
 
-export function KnowledgeForm({ initial, submitLabel, onSubmit, onCancel }: KnowledgeFormProps) {
+export function KnowledgeForm({ initial, noteId, initialRelated, submitLabel, onSubmit, onCancel }: KnowledgeFormProps) {
   const [formError, setFormError] = useState<string | null>(null);
   const [preview, setPreview] = useState(false);
   const {
@@ -31,7 +37,7 @@ export function KnowledgeForm({ initial, submitLabel, onSubmit, onCancel }: Know
     formState: { errors, isSubmitting, isDirty },
   } = useForm<KnowledgeValues>({
     resolver: zodResolver(knowledgeSchema),
-    defaultValues: { title: "", content: "", tags: [], project_id: null, ...initial },
+    defaultValues: { title: "", content: "", tags: [], project_id: null, related_ids: [], ...initial },
   });
   useUnsavedChanges(isDirty && !isSubmitting);
   const content = useWatch({ control, name: "content" });
@@ -96,7 +102,20 @@ export function KnowledgeForm({ initial, submitLabel, onSubmit, onCancel }: Know
         </Field>
       </div>
 
+      <Field label="Related notes" optional error={errors.related_ids?.message} hint="Links work both ways: the other note will show this one too.">
+        {(props) => (
+          <Controller
+            control={control}
+            name="related_ids"
+            render={({ field }) => (
+              <RelatedNotesPicker {...props} currentId={noteId} initialRefs={initialRelated} value={field.value} onChange={field.onChange} />
+            )}
+          />
+        )}
+      </Field>
+
       <div className="border-base-300 flex flex-col-reverse gap-2 border-t pt-5 sm:flex-row sm:justify-end">
+        <SaveStatus dirty={isDirty} saving={isSubmitting} existing={Boolean(noteId)} />
         <button type="button" className="btn btn-ghost" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </button>

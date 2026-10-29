@@ -24,6 +24,7 @@ from app.core.security import (
     hash_token,
     verify_password,
 )
+from app.core.legal import CURRENT_TERMS_VERSION
 from app.models import PasswordResetToken, User, UserSession
 from app.services.errors import ConflictError, InvalidInputError
 
@@ -43,10 +44,18 @@ def _now() -> datetime:
     return datetime.now(UTC)
 
 
-def register_user(db: Session, email: str, password: str, full_name: str) -> User:
+def register_user(db: Session, email: str, password: str, full_name: str, terms_version: str) -> User:
+    if terms_version != CURRENT_TERMS_VERSION:
+        raise InvalidInputError("The Terms have been updated. Please reload the page and review them.")
     if db.exec(select(User.id).where(User.email == email)).first():
         raise ConflictError("An account with this email already exists")
-    user = User(email=email, full_name=full_name, password_hash=hash_password(password))
+    user = User(
+        email=email,
+        full_name=full_name,
+        password_hash=hash_password(password),
+        terms_version=terms_version,
+        terms_accepted_at=_now(),
+    )
     db.add(user)
     try:
         db.commit()
@@ -150,6 +159,14 @@ def change_password(db: Session, user: User, current: str, new: str, keep_sessio
     db.commit()
     # Sign out every other device.
     revoke_all_sessions(db, user.id, except_session=keep_session)
+
+
+def delete_account(db: Session, user: User, password: str) -> None:
+    """Permanently delete the user and (via ON DELETE CASCADE) all their data."""
+    if not verify_password(password, user.password_hash):
+        raise InvalidInputError("Password is incorrect")
+    db.delete(user)
+    db.commit()
 
 
 def create_password_reset(db: Session, email: str) -> tuple[User, str] | None:

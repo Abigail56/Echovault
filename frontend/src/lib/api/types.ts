@@ -15,10 +15,13 @@ export interface User {
   email: string;
   full_name: string;
   created_at: ISODate;
+  terms_version: string | null;
+  terms_accepted_at: ISODate | null;
 }
 
 export interface AuthConfig {
   password_reset_available: boolean;
+  terms_version: string;
 }
 
 export interface ProjectRef {
@@ -51,12 +54,20 @@ export interface KnowledgeSummary {
   excerpt: string;
   tags: string[];
   project: ProjectRef | null;
+  archived_at: ISODate | null;
   created_at: ISODate;
   updated_at: ISODate;
 }
 
+export interface KnowledgeRef {
+  id: UUID;
+  title: string;
+  archived: boolean;
+}
+
 export interface Knowledge extends KnowledgeSummary {
   content: string;
+  related: KnowledgeRef[];
 }
 
 export interface KnowledgeInput {
@@ -64,6 +75,7 @@ export interface KnowledgeInput {
   content: string;
   tags: string[];
   project_id: UUID | null;
+  related_ids: UUID[];
 }
 
 export interface TagCount {
@@ -71,18 +83,23 @@ export interface TagCount {
   count: number;
 }
 
+export type DecisionStatus = "proposed" | "accepted" | "superseded" | "reviewed";
+
 export interface DecisionSummary {
   id: UUID;
   title: string;
   excerpt: string;
   project: ProjectRef | null;
+  status: DecisionStatus;
   has_outcome: boolean;
+  reviewed_at: ISODate | null;
   created_at: ISODate;
   updated_at: ISODate;
 }
 
 export interface DecisionFields {
   context: string;
+  problem: string;
   decision: string;
   reasoning: string;
   alternatives: string;
@@ -94,6 +111,7 @@ export interface Decision extends DecisionSummary, DecisionFields {}
 
 export interface DecisionInput extends DecisionFields {
   title: string;
+  status: DecisionStatus;
   project_id: UUID | null;
 }
 
@@ -105,18 +123,26 @@ export interface SearchHit {
   title: string;
   excerpt: string;
   updated_at: ISODate;
+  label: string | null;
 }
+
+export type SearchFilter = "all" | SearchResultType;
 
 export interface SearchResults {
   query: string;
+  type: SearchFilter;
   knowledge: SearchHit[];
   projects: SearchHit[];
   decisions: SearchHit[];
+  counts: { knowledge: number; projects: number; decisions: number };
   total: number;
+  limit: number;
+  offset: number;
 }
 
 export interface DashboardStats {
   knowledge_count: number;
+  archived_knowledge_count: number;
   project_count: number;
   active_project_count: number;
   decision_count: number;
@@ -131,6 +157,7 @@ export interface AssistantStatus {
 
 export interface AssistantSource {
   ref: number;
+  type: "knowledge" | "decision";
   id: UUID;
   title: string;
   excerpt: string;

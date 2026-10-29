@@ -6,69 +6,34 @@
 }
 
 /*
- * Design tokens. The brief's primary (#7775F5) is kept for the dark theme;
- * on white it is slightly deepened (#5B58E6) so white button text meets
- * WCAG AA contrast (4.5:1).
+ * Design tokens. Dark is the primary theme (palette from the product brief);
+ * the light theme is an alternative chosen in Settings. Accents are used
+ * sparingly; status colours are restrained and always paired with an icon or
+ * text so colour is never the only signal.
  */
 @plugin "daisyui/theme" {
-  name: "echovault";
-  default: true;
-  color-scheme: light;
-  --color-base-100: #ffffff;
-  --color-base-200: #f7f8fc;
-  --color-base-300: #e3e7f0;
-  --color-base-content: #172033;
-  --color-primary: #5b58e6;
-  --color-primary-content: #ffffff;
-  --color-secondary: #55b8e8;
-  --color-secondary-content: #0b2533;
-  --color-accent: #7775f5;
-  --color-accent-content: #ffffff;
-  --color-neutral: #101525;
-  --color-neutral-content: #e6e9f2;
-  --color-info: #2f8fc4;
-  --color-info-content: #ffffff;
-  --color-success: #16856b;
-  --color-success-content: #ffffff;
-  --color-warning: #c58a25;
-  --color-warning-content: #1c1406;
-  --color-error: #c74652;
-  --color-error-content: #ffffff;
-  --radius-selector: 0.5rem;
-  --radius-field: 0.5rem;
-  --radius-box: 0.75rem;
-  --size-selector: 0.25rem;
-  --size-field: 0.25rem;
-  --border: 1px;
-  --depth: 0;
-  --noise: 0;
-  --ev-muted: #5f6a80;
-  --ev-surface-sunken: #f1f3f9;
-}
-
-@plugin "daisyui/theme" {
   name: "echovault-dark";
-  prefersdark: true;
+  default: true;
   color-scheme: dark;
-  --color-base-100: #171e30;
-  --color-base-200: #101525;
-  --color-base-300: #2a3550;
-  --color-base-content: #e6e9f2;
-  --color-primary: #7775f5;
-  --color-primary-content: #0d1020;
-  --color-secondary: #55b8e8;
-  --color-secondary-content: #0b2533;
-  --color-accent: #9a98ff;
-  --color-accent-content: #0d1020;
-  --color-neutral: #202a40;
-  --color-neutral-content: #e6e9f2;
-  --color-info: #55b8e8;
-  --color-info-content: #0b2533;
-  --color-success: #3fbf98;
-  --color-success-content: #05221a;
-  --color-warning: #e0a948;
-  --color-warning-content: #1c1406;
-  --color-error: #ef6f7a;
+  --color-base-100: #151923; /* elevated surface: cards, inputs */
+  --color-base-200: #0b0d12; /* page background */
+  --color-base-300: #282e3b; /* borders */
+  --color-base-content: #f4f6fb;
+  --color-primary: #7c83ff;
+  --color-primary-content: #0b0d12;
+  --color-secondary: #55c5f2;
+  --color-secondary-content: #04202c;
+  --color-accent: #55c5f2;
+  --color-accent-content: #04202c;
+  --color-neutral: #1b202b;
+  --color-neutral-content: #f4f6fb;
+  --color-info: #55c5f2;
+  --color-info-content: #04202c;
+  --color-success: #4cc38a;
+  --color-success-content: #05210f;
+  --color-warning: #e2b04a;
+  --color-warning-content: #231803;
+  --color-error: #f0707b;
   --color-error-content: #2a0a0e;
   --radius-selector: 0.5rem;
   --radius-field: 0.5rem;
@@ -78,15 +43,56 @@
   --border: 1px;
   --depth: 0;
   --noise: 0;
-  --ev-muted: #a3acc2;
-  --ev-surface-sunken: #131a2b;
+  --ev-muted: #a0a8b8; /* secondary text */
+  --ev-subtle: #8a93a6; /* metadata (lightened from #737D90 to keep 4.5:1 contrast on surfaces) */
+  --ev-surface-sunken: #1b202b; /* secondary surface: code, previews */
+  --ev-sidebar: #10131a;
+}
+
+@plugin "daisyui/theme" {
+  name: "echovault";
+  color-scheme: light;
+  --color-base-100: #ffffff;
+  --color-base-200: #f6f7fb;
+  --color-base-300: #e2e6ef;
+  --color-base-content: #151a26;
+  --color-primary: #5157e0;
+  --color-primary-content: #ffffff;
+  --color-secondary: #1a8fc0;
+  --color-secondary-content: #ffffff;
+  --color-accent: #1a8fc0;
+  --color-accent-content: #ffffff;
+  --color-neutral: #10131a;
+  --color-neutral-content: #f4f6fb;
+  --color-info: #1a8fc0;
+  --color-info-content: #ffffff;
+  --color-success: #16805f;
+  --color-success-content: #ffffff;
+  --color-warning: #a8701a;
+  --color-warning-content: #ffffff;
+  --color-error: #c43c48;
+  --color-error-content: #ffffff;
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+  --ev-muted: #5a6478;
+  --ev-subtle: #667085;
+  --ev-surface-sunken: #f0f2f8;
+  --ev-sidebar: #ffffff;
 }
 
 @theme inline {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --color-muted: var(--ev-muted);
+  --color-subtle: var(--ev-subtle);
   --color-sunken: var(--ev-surface-sunken);
+  --color-sidebar: var(--ev-sidebar);
 }
 
 @layer base {
@@ -98,6 +104,11 @@
     font-size: 15px;
     line-height: 1.6;
   }
+  @media (min-width: 1280px) {
+    body {
+      font-size: 16px;
+    }
+  }
   :focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
@@ -105,15 +116,33 @@
 }
 
 @layer components {
-  /* Typography scale used across the app. */
+  /* Typography scale used across the app (fluid between phone and desktop). */
+  .text-display {
+    /* Landing hero: ~40px on phones up to 68px on large screens. */
+    font-size: clamp(2.5rem, 1.6rem + 3.6vw, 4.25rem);
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    font-weight: 650;
+  }
+  .text-headline {
+    /* Landing section headings: 30px to 42px. */
+    font-size: clamp(1.875rem, 1.4rem + 1.6vw, 2.625rem);
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    font-weight: 620;
+  }
   .text-page-title {
-    @apply text-2xl font-semibold tracking-tight sm:text-[1.75rem];
+    /* Workspace page headings: 26px to 30px. */
+    @apply text-[1.625rem] leading-tight font-semibold tracking-tight sm:text-[1.875rem];
   }
   .text-section {
-    @apply text-base font-semibold;
+    @apply text-[1.0625rem] leading-snug font-semibold;
   }
   .text-meta {
-    @apply text-xs text-muted;
+    @apply text-[0.8125rem] text-subtle;
+  }
+  .eyebrow {
+    @apply text-primary text-[0.8125rem] font-medium tracking-wide uppercase;
   }
   .surface {
     @apply rounded-box border border-base-300 bg-base-100;
@@ -156,23 +185,6 @@
     transform: translateY(12px) scale(0.96);
   }
 }
-@keyframes ev-float {
-  50% {
-    transform: translateY(-8px);
-  }
-}
-@keyframes ev-drift {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  33% {
-    transform: translate(6%, -8%) scale(1.08);
-  }
-  66% {
-    transform: translate(-5%, 6%) scale(0.95);
-  }
-}
 @keyframes ev-pop {
   0% {
     transform: scale(0.6);
@@ -210,8 +222,8 @@
     border-color 0.2s;
 }
 .lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px -12px color-mix(in oklab, var(--color-primary) 35%, transparent);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -16px rgb(0 0 0 / 0.55);
 }
 
 /* Buttons give a small "press" when clicked. */
@@ -235,9 +247,6 @@
   transform: translateX(3px);
 }
 
-.animate-float {
-  animation: ev-float 6s ease-in-out infinite;
-}
 .animate-pop {
   animation: ev-pop 0.35s var(--ease-spring) both;
 }
@@ -245,15 +254,6 @@
   animation: ev-toast-in 0.3s var(--ease-spring) both;
 }
 
-/* Soft blurred glow shapes behind the landing hero. */
-.glow-blob {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(64px);
-  opacity: 0.35;
-  pointer-events: none;
-  animation: ev-drift 18s ease-in-out infinite;
-}
 
 /* Mobile navigation slides in from the left. */
 dialog[open] .slide-in-left {
@@ -271,6 +271,12 @@ dialog[open] .slide-in-left {
 .reveal.is-visible {
   opacity: 1;
   transform: none;
+}
+
+/* Long unbroken strings (URLs, identifiers) must never widen the page.
+   Unlayered on purpose so it overrides Tailwind's own break-words utility. */
+.break-words {
+  overflow-wrap: anywhere;
 }
 
 /* Rendered Markdown (notes, assistant answers). */
@@ -311,4 +317,40 @@ dialog[open] .slide-in-left {
   .btn:active:not(:disabled) {
     transform: none;
   }
+}
+
+/* Legal pages: readable long-form text. */
+.legal-prose {
+  max-width: 70ch;
+  overflow-wrap: anywhere;
+}
+.legal-prose h2 {
+  @apply mt-10 mb-3 text-xl font-semibold tracking-tight;
+  scroll-margin-top: 5rem;
+}
+.legal-prose h3 {
+  @apply mt-6 mb-2 text-base font-semibold;
+}
+.legal-prose p,
+.legal-prose li {
+  @apply text-muted leading-relaxed;
+}
+.legal-prose p + p {
+  margin-top: 0.75em;
+}
+.legal-prose ul {
+  @apply my-3 list-disc space-y-1.5 pl-6;
+}
+.legal-prose a {
+  @apply text-primary underline underline-offset-2;
+}
+.legal-prose strong {
+  @apply text-base-content font-semibold;
+}
+.legal-prose table {
+  @apply my-4 block w-full overflow-x-auto text-sm;
+}
+.legal-prose th,
+.legal-prose td {
+  @apply border-base-300 border px-3 py-2 text-left align-top;
 }

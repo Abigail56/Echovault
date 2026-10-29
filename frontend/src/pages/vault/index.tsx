@@ -1,4 +1,4 @@
-import { BookOpen, Plus, SearchX } from "lucide-react";
+import { Archive, BookOpen, Plus, SearchX } from "lucide-react";
 import Head from "next/head";
 import Link from "next/link";
 
@@ -11,7 +11,7 @@ import { SearchInput } from "@/components/ui/SearchInput";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ui/States";
 import { useAsync } from "@/hooks/useAsync";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
-import { knowledgeApi, type KnowledgeQuery } from "@/lib/api/services";
+import { knowledgeApi, type KnowledgeQuery, searchApi } from "@/lib/api/services";
 import type { PageWithLayout } from "@/lib/layout";
 
 const PAGE_SIZE = 20;
@@ -24,7 +24,8 @@ const SORTS = {
 type SortKey = keyof typeof SORTS;
 
 const VaultPage: PageWithLayout = () => {
-  const { values, update, offset, ready } = useUrlFilters(["q", "tag", "project", "sort"] as const);
+  const { values, update, offset, ready } = useUrlFilters(["q", "tag", "project", "sort", "view"] as const);
+  const archivedView = values.view === "archived";
   const sortKey: SortKey = values.sort in SORTS ? (values.sort as SortKey) : "updated";
   const filtering = Boolean(values.q || values.tag || values.project);
 
@@ -32,6 +33,7 @@ const VaultPage: PageWithLayout = () => {
     q: values.q || undefined,
     tag: values.tag || undefined,
     project_id: values.project || undefined,
+    archived: archivedView || undefined,
     sort: SORTS[sortKey].sort,
     order: SORTS[sortKey].order,
     limit: PAGE_SIZE,
@@ -39,6 +41,7 @@ const VaultPage: PageWithLayout = () => {
   };
   const list = useAsync((signal) => knowledgeApi.list(query, signal), [JSON.stringify(query)], ready);
   const tags = useAsync(() => knowledgeApi.tags(), []);
+  const stats = useAsync(() => searchApi.stats(), []);
 
   return (
     <>
@@ -46,7 +49,7 @@ const VaultPage: PageWithLayout = () => {
         <title>Knowledge Vault · EchoVault Nexus</title>
       </Head>
       <PageHeader
-        title="Knowledge Vault"
+        title="Vault"
         description="Everything you've captured: ideas, lessons, references and notes."
         actions={
           <Link href="/vault/new" className="btn btn-primary btn-sm">
@@ -55,7 +58,29 @@ const VaultPage: PageWithLayout = () => {
         }
       />
 
-      <div className="mb-5 grid gap-3 md:grid-cols-[1fr_11rem_11rem_11rem]">
+      <div role="tablist" aria-label="Which notes to show" className="mb-4 flex gap-1">
+        {[
+          { value: null, label: "Active", count: stats.data?.knowledge_count },
+          { value: "archived", label: "Archived", count: stats.data?.archived_knowledge_count },
+        ].map((tab) => {
+          const selected = (tab.value === "archived") === archivedView;
+          return (
+            <button
+              key={tab.label}
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              onClick={() => update({ view: tab.value })}
+              className={`btn btn-sm ${selected ? "btn-primary" : "btn-ghost border-base-300"}`}
+            >
+              {tab.label}
+              {tab.count !== undefined && <span className="tabular-nums opacity-70">{tab.count}</span>}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_11rem_11rem_11rem]">
         <SearchInput value={values.q} onChange={(q) => update({ q })} label="Search the vault" placeholder="Search titles and content" />
         <select
           className="select w-full"
@@ -85,7 +110,9 @@ const VaultPage: PageWithLayout = () => {
       ) : list.loading && !list.data ? (
         <ListSkeleton />
       ) : list.data && list.data.items.length === 0 ? (
-        filtering ? (
+        archivedView && !filtering ? (
+          <EmptyState icon={Archive} title="No archived notes" description="Archive a note from its page to tidy your vault without deleting it. Archived notes stay searchable and can be restored." />
+        ) : filtering ? (
           <EmptyState
             icon={SearchX}
             title="No matching items"

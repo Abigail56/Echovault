@@ -5,11 +5,13 @@ from fastapi.responses import JSONResponse
 
 from app.api.deps import Auth, DbSession, require_csrf
 from app.core.config import settings
+from app.core.legal import CURRENT_TERMS_VERSION
 from app.core.cookies import REFRESH_COOKIE, clear_auth_cookies, set_auth_cookies
 from app.core.rate_limit import client_ip, limiter
 from app.models import User
 from app.schemas.auth import (
     AuthConfig,
+    DeleteAccountRequest,
     LoginRequest,
     PasswordChangeRequest,
     PasswordResetConfirm,
@@ -28,13 +30,13 @@ INVALID_CREDENTIALS = "Invalid email or password"
 
 @router.get("/config", response_model=AuthConfig)
 def auth_config() -> AuthConfig:
-    return AuthConfig(password_reset_available=settings.email_configured)
+    return AuthConfig(password_reset_available=settings.email_configured, terms_version=CURRENT_TERMS_VERSION)
 
 
 @router.post("/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
 def register(body: RegisterRequest, request: Request, response: Response, db: DbSession) -> UserPublic:
     limiter.hit(f"register:{client_ip(request)}", limit=10, window_seconds=3600)
-    user = auth_service.register_user(db, body.email, body.password, body.full_name)
+    user = auth_service.register_user(db, body.email, body.password, body.full_name, body.terms_version)
     tokens = auth_service.start_session(db, user, request.headers.get("user-agent"))
     set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
     return UserPublic.model_validate(user)
@@ -81,6 +83,14 @@ def logout(auth: Auth, response: Response, db: DbSession) -> None:
 def logout_everywhere(auth: Auth, response: Response, db: DbSession) -> None:
     """Sign out of every device, including this one."""
     auth_service.revoke_all_sessions(db, auth.user.id)
+    clear_auth_cookies(response)
+
+
+@router.post("/delete-account", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(require_csrf)])
+def delete_account(body: DeleteAccountRequest, auth: Auth, response: Response, db: DbSession) -> None:
+    """Permanently delete the account and everything in it. Requires the password."""
+    limiter.hit(f"delete-account:{auth.user.id}", limit=5, window_seconds=900)
+    auth_service.delete_account(db, auth.user, body.password)
     clear_auth_cookies(response)
 
 

@@ -1,5 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 
+import { TERMS_VERSION } from "../src/lib/legal";
+
 export const PASSWORD = "e2e test password";
 
 let counter = 0;
@@ -14,7 +16,7 @@ export function uniqueEmail(prefix = "user"): string {
  */
 export async function signUpViaApi(page: Page, name = "Ada Lovelace", email = uniqueEmail()) {
   const response = await page.request.post("/api/v1/auth/register", {
-    data: { email, password: PASSWORD, full_name: name },
+    data: { email, password: PASSWORD, full_name: name, accept_terms: true, terms_version: TERMS_VERSION },
   });
   expect(response.status(), await response.text()).toBe(201);
   return { email, name };

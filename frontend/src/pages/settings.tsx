@@ -1,9 +1,11 @@
-import { Bot, CheckCircle2, LogOut, Monitor, Moon, Palette, ShieldCheck, Sun, XCircle } from "lucide-react";
+import { Bot, CheckCircle2, FileText, LogOut, Monitor, Moon, Palette, ShieldCheck, Sun, TriangleAlert, XCircle } from "lucide-react";
+import Link from "next/link";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { appLayout } from "@/components/layout/AppShell";
+import { DeleteAccountDialog } from "@/components/settings/DeleteAccountDialog";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { useAsync } from "@/hooks/useAsync";
@@ -12,12 +14,13 @@ import { type ThemePreference, useTheme } from "@/hooks/useTheme";
 import { useToast } from "@/hooks/useToast";
 import { errorMessage } from "@/lib/api/client";
 import { assistantApi, authApi } from "@/lib/api/services";
+import { formatDate } from "@/lib/format";
 import type { PageWithLayout } from "@/lib/layout";
 
 const THEMES: { value: ThemePreference; label: string; icon: typeof Sun }[] = [
-  { value: "system", label: "System", icon: Monitor },
-  { value: "light", label: "Light", icon: Sun },
   { value: "dark", label: "Dark", icon: Moon },
+  { value: "light", label: "Light", icon: Sun },
+  { value: "system", label: "System", icon: Monitor },
 ];
 
 function Section({ icon: Icon, title, description, children }: { icon: typeof Sun; title: string; description: string; children: React.ReactNode }) {
@@ -46,13 +49,14 @@ function Configured({ ok, label }: { ok: boolean; label: string }) {
 
 const SettingsPage: PageWithLayout = () => {
   const { preference, setPreference } = useTheme();
-  const { forgetSession } = useAuth();
+  const { forgetSession, user } = useAuth();
   const router = useRouter();
   const toast = useToast();
   const assistant = useAsync(() => assistantApi.status(), []);
   const authConfig = useAsync(() => authApi.config(), []);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const signOutEverywhere = async () => {
     setBusy(true);
@@ -127,7 +131,42 @@ const SettingsPage: PageWithLayout = () => {
             </button>
           </div>
         </Section>
+        <Section icon={FileText} title="Legal" description="The documents that apply to your account.">
+          <p className="text-sm">
+            {user?.terms_accepted_at ? (
+              <>
+                You accepted the Terms and Conditions (version {user.terms_version}) on {formatDate(user.terms_accepted_at)}.
+              </>
+            ) : (
+              <>This account was created before Terms acceptance was recorded.</>
+            )}
+          </p>
+          <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            <li><Link className="link link-primary" href="/terms">Terms and Conditions</Link></li>
+            <li><Link className="link link-primary" href="/privacy">Privacy Policy</Link></li>
+            <li><Link className="link link-primary" href="/acceptable-use">Acceptable Use</Link></li>
+            <li><Link className="link link-primary" href="/cookies">Cookies</Link></li>
+          </ul>
+        </Section>
+
+        <section className="border-error/40 rounded-box border p-5 sm:p-6" aria-labelledby="danger-zone">
+          <div className="mb-4 flex items-start gap-3">
+            <TriangleAlert className="text-error mt-0.5 size-5 shrink-0" aria-hidden />
+            <div>
+              <h2 id="danger-zone" className="text-section">
+                Delete account
+              </h2>
+              <p className="text-meta">
+                Permanently deletes your account and everything in it: notes, projects, decisions, tags and sessions. This cannot be undone.
+              </p>
+            </div>
+          </div>
+          <button type="button" className="btn btn-sm btn-error btn-outline" onClick={() => setDeleteOpen(true)}>
+            Delete my account
+          </button>
+        </section>
       </div>
+      <DeleteAccountDialog open={deleteOpen} onClose={() => setDeleteOpen(false)} />
       <ConfirmDialog
         open={confirming}
         title="Sign out of all devices?"

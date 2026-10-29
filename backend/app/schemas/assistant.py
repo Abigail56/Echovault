@@ -1,5 +1,5 @@
 import uuid
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, StringConstraints
 
@@ -14,6 +14,8 @@ class AssistantQuestion(BaseModel):
 class AssistantSource(BaseModel):
     # The number the model uses to cite this source, e.g. [1].
     ref: int
+    # Which kind of record this is, so the UI can link to it.
+    type: Literal["knowledge", "decision"]
     id: uuid.UUID
     title: str
     excerpt: str

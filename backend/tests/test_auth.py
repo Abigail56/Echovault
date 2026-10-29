@@ -9,7 +9,8 @@ from app.models import User, UserSession
 from app.services import auth_service
 from app.services.email_service import get_email_sender
 from app.main import app
-from tests.conftest import PASSWORD, new_client, sign_up
+from app.core.legal import CURRENT_TERMS_VERSION
+from tests.conftest import PASSWORD, new_client, registration, sign_up
 
 API = "/api/v1/auth"
 
@@ -34,10 +35,10 @@ def test_register_creates_user_and_session(client, db):
 
 def test_register_validation(client):
     bad = [
-        {"email": "not-an-email", "password": PASSWORD, "full_name": "A"},
-        {"email": "a@example.com", "password": "short", "full_name": "A"},
-        {"email": "a@example.com", "password": PASSWORD, "full_name": "   "},
-        {"email": "a@example.com", "password": " " * 12, "full_name": "A"},
+        registration("not-an-email"),
+        registration("a@example.com", password="short"),
+        registration("a@example.com", full_name="   "),
+        registration("a@example.com", password=" " * 12),
     ]
     for payload in bad:
         assert client.post(f"{API}/register", json=payload).status_code == 422
@@ -47,7 +48,7 @@ def test_duplicate_email_is_rejected_case_insensitively(client):
     sign_up(client)
     other = new_client()
     response = other.post(
-        f"{API}/register", json={"email": "ADA@example.com", "password": PASSWORD, "full_name": "X"}
+        f"{API}/register", json=registration("ADA@example.com", "X")
     )
     assert response.status_code == 409
 
@@ -57,7 +58,7 @@ def test_concurrent_duplicate_registration_hits_unique_constraint(db):
     db.add(User(email="race@example.com", full_name="A", password_hash="x"))
     db.commit()
     try:
-        auth_service.register_user(db, "race@example.com", PASSWORD, "B")
+        auth_service.register_user(db, "race@example.com", PASSWORD, "B", CURRENT_TERMS_VERSION)
     except auth_service.ConflictError:
         pass
     else:
@@ -206,7 +207,10 @@ class FakeEmail:
 
 
 def test_password_reset_not_configured(client):
-    assert client.get(f"{API}/config").json() == {"password_reset_available": False}
+    assert client.get(f"{API}/config").json() == {
+        "password_reset_available": False,
+        "terms_version": CURRENT_TERMS_VERSION,
+    }
     response = client.post(f"{API}/password-reset/request", json={"email": "ada@example.com"})
     assert response.status_code == 503
 
@@ -247,3 +251,44 @@ def test_expired_reset_token_is_rejected(user_client, db):
     db.commit()
     response = anon.post(f"{API}/password-reset/confirm", json={"token": token, "new_password": "another good password"})
     assert response.status_code == 422
+
+
+def test_registration_requires_terms_acceptance(client, db):
+    missing = registration("t@example.com")
+    del missing["accept_terms"]
+    assert client.post(f"{API}/register", json=missing).status_code == 422
+    declined = client.post(f"{API}/register", json=registration("t@example.com", accept_terms=False))
+    assert declined.status_code == 422
+    assert "Terms" in str(declined.json())
+    outdated = client.post(f"{API}/register", json=registration("t@example.com", terms_version="2000-01-01"))
+    assert outdated.status_code == 422
+    assert db.exec(select(User).where(User.email == "t@example.com")).first() is None
+
+    ok = client.post(f"{API}/register", json=registration("t@example.com"))
+    assert ok.status_code == 201
+    assert ok.json()["terms_version"] == CURRENT_TERMS_VERSION
+    assert ok.json()["terms_accepted_at"] is not None
+    assert client.get(f"{API}/config").json()["terms_version"] == CURRENT_TERMS_VERSION
+
+
+def test_delete_account_removes_everything_and_only_that_user(user_client, other_client, db):
+    user_client.post("/api/v1/knowledge", json={"title": "Mine"})
+    user_client.post("/api/v1/projects", json={"name": "Mine"})
+    other_client.post("/api/v1/knowledge", json={"title": "Theirs"})
+
+    wrong = user_client.post(f"{API}/delete-account", json={"password": "not my password"})
+    assert wrong.status_code == 422
+    assert user_client.get(f"{API}/me").status_code == 200
+
+    assert user_client.post(f"{API}/delete-account", json={"password": PASSWORD}).status_code == 204
+    assert db.exec(select(User).where(User.email == "ada@example.com")).first() is None
+    assert user_client.get(f"{API}/me").status_code == 401
+    # Signing in again is impossible; the other user's data is untouched.
+    relogin = new_client().post(f"{API}/login", json={"email": "ada@example.com", "password": PASSWORD})
+    assert relogin.status_code == 401
+    assert other_client.get("/api/v1/knowledge").json()["total"] == 1
+
+
+def test_delete_account_requires_csrf(user_client):
+    del user_client.headers["X-CSRF-Token"]
+    assert user_client.post(f"{API}/delete-account", json={"password": PASSWORD}).status_code == 403

@@ -16,6 +16,9 @@ class User(TimestampedModel, table=True):
     full_name: str = Field(max_length=120)
     password_hash: str = Field(max_length=255)
     is_active: bool = Field(default=True)
+    # Which Terms version the user accepted at registration, and when.
+    terms_version: str | None = Field(default=None, max_length=32)
+    terms_accepted_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
 
 
 class UserSession(SQLModel, table=True):
