@@ -16,7 +16,7 @@ import { useAsync } from "@/hooks/useAsync";
 import { useToast } from "@/hooks/useToast";
 import { errorMessage } from "@/lib/api/client";
 import { decisionsApi, knowledgeApi } from "@/lib/api/services";
-import { formatDate, formatDateTime, queryParam } from "@/lib/format";
+import { formatDate, formatDateTime, isUuid, queryParam } from "@/lib/format";
 import type { PageWithLayout } from "@/lib/layout";
 
 function MetaSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -62,11 +62,12 @@ const KnowledgeDetailPage: PageWithLayout = () => {
 
   // Appends text read from an attachment to the end of the note.
   const addToNote = async (text: string, filename: string) => {
-    const current = item.data?.content.trimEnd() ?? "";
     const block = `### From ${filename}\n\n${text.trim()}`;
     try {
+      // Re-read the note first so several additions in a row never overwrite each other.
+      const current = (await knowledgeApi.get(id)).content.trimEnd();
       item.setData(await knowledgeApi.update(id, { content: current ? `${current}\n\n${block}` : block }));
-      toast.success("Text added to the note");
+      toast.success(`Text from ${filename} added to the note`);
     } catch (error) {
       toast.error(errorMessage(error));
     }
@@ -81,6 +82,11 @@ const KnowledgeDetailPage: PageWithLayout = () => {
       toast.error("Couldn't copy. Select the text and copy it manually.");
     }
   };
+
+  // Set by the New note page when "Put the text from these files into the note" was ticked.
+  const autoAddIds = queryParam(router.query.autotext).split(",").filter(isUuid);
+  const clearAutoAdd = () =>
+    void router.replace({ pathname: router.pathname, query: { id } }, undefined, { shallow: true });
 
   const remove = async () => {
     setDeleting(true);
@@ -236,7 +242,14 @@ const KnowledgeDetailPage: PageWithLayout = () => {
             </aside>
           </div>
 
-          <AttachmentPanel key={k.id} noteId={k.id} initial={k.attachments} onAddToNote={addToNote} />
+          <AttachmentPanel
+            key={k.id}
+            noteId={k.id}
+            initial={k.attachments}
+            onAddToNote={addToNote}
+            autoAddIds={autoAddIds}
+            onAutoAddDone={clearAutoAdd}
+          />
 
           <section className="mt-6" aria-labelledby="connections-heading">
             <h2 id="connections-heading" className="text-section mb-3">

@@ -33,6 +33,9 @@ const NewKnowledgePage: PageWithLayout = () => {
   const [saving, setSaving] = useState(false);
   // Set once the note exists, so a retry never creates a second note.
   const [createdId, setCreatedId] = useState<string | null>(null);
+  // Put the text read from the files into the note automatically.
+  const [addText, setAddText] = useState(true);
+  const uploadedIds = useRef<string[]>([]);
 
   // Always-current copy of the list, for the save loop and for cleanup.
   const stagedRef = useRef(staged);
@@ -94,9 +97,10 @@ const NewKnowledgePage: PageWithLayout = () => {
       for (const item of stagedRef.current.filter((s) => s.status !== "uploaded")) {
         patch(item.key, { status: "uploading", progress: 0, error: undefined });
         try {
-          await uploadWithProgress<Attachment>(`/knowledge/${noteId}/attachments`, item.file, item.file.name, (p) =>
+          const created = await uploadWithProgress<Attachment>(`/knowledge/${noteId}/attachments`, item.file, item.file.name, (p) =>
             patch(item.key, { progress: p }),
           );
+          uploadedIds.current.push(created.id);
           patch(item.key, { status: "uploaded", progress: 1 });
         } catch (error) {
           failed += 1;
@@ -114,7 +118,8 @@ const NewKnowledgePage: PageWithLayout = () => {
 
       const uploaded = stagedRef.current.length;
       toast.success(uploaded ? `Saved to your vault with ${plural(uploaded, "attachment")}` : "Saved to your vault");
-      await router.push(`/vault/${noteId}`);
+      const autotext = addText && uploadedIds.current.length ? uploadedIds.current.join(",") : undefined;
+      await router.push({ pathname: "/vault/[id]", query: autotext ? { id: noteId, autotext } : { id: noteId } });
     } finally {
       setSaving(false);
     }
@@ -162,6 +167,23 @@ const NewKnowledgePage: PageWithLayout = () => {
             onRemove={removeFile}
             onDismissRejections={() => setRejections([])}
           />
+          {staged.length > 0 && (
+            <label className="flex cursor-pointer items-start gap-3 text-sm">
+              <input
+                type="checkbox"
+                className="checkbox checkbox-primary checkbox-sm mt-0.5"
+                checked={addText}
+                onChange={(e) => setAddText(e.target.checked)}
+                disabled={saving}
+              />
+              <span>
+                <span className="font-medium">Put the text from these files into the note</span>
+                <span className="text-muted block">
+                  After saving, text read from screenshots and documents is added below your content automatically. It&apos;s searchable either way.
+                </span>
+              </span>
+            </label>
+          )}
         </KnowledgeForm>
       </div>
     </>

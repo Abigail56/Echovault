@@ -59,9 +59,13 @@ interface AttachmentPanelProps {
   initial: Attachment[];
   /** Appends text to the note (used by "Add to note" in the text viewer). */
   onAddToNote: (text: string, filename: string) => Promise<void>;
+  /** Attachments whose text should be added to the note automatically once it has been read. */
+  autoAddIds?: string[];
+  /** Called when every auto-add attachment has been handled. */
+  onAutoAddDone?: () => void;
 }
 
-export function AttachmentPanel({ noteId, initial, onAddToNote }: AttachmentPanelProps) {
+export function AttachmentPanel({ noteId, initial, onAddToNote, autoAddIds, onAutoAddDone }: AttachmentPanelProps) {
   const toast = useToast();
   const [items, setItems] = useState<Attachment[]>(initial);
   const [uploading, setUploading] = useState<Uploading[]>([]);
@@ -114,6 +118,32 @@ export function AttachmentPanel({ noteId, initial, onAddToNote }: AttachmentPane
     },
     [noteId, refreshUsage, toast, usage],
   );
+
+  // Text from files chosen with "Put the text into the note" is added as soon as it's read.
+  const autoRemaining = useRef(new Set(autoAddIds ?? []));
+  const autoBusy = useRef(false);
+  useEffect(() => {
+    if (autoBusy.current || autoRemaining.current.size === 0) return;
+    const ready = items.filter((a) => autoRemaining.current.has(a.id) && a.extraction_status !== "pending");
+    const gone = [...autoRemaining.current].filter((id) => !items.some((a) => a.id === id));
+    if (!ready.length && !gone.length) return;
+    autoBusy.current = true;
+    void (async () => {
+      for (const id of gone) autoRemaining.current.delete(id);
+      for (const a of ready) {
+        autoRemaining.current.delete(a.id);
+        if (a.text_chars === 0) continue;
+        try {
+          const detail = await attachmentsApi.get(a.id);
+          await onAddToNote(detail.extracted_text, a.filename);
+        } catch (error) {
+          toast.error(`${a.filename}: ${errorMessage(error)}`);
+        }
+      }
+      autoBusy.current = false;
+      if (autoRemaining.current.size === 0) onAutoAddDone?.();
+    })();
+  }, [items, onAddToNote, onAutoAddDone, toast]);
 
   // Ctrl+V / Cmd+V anywhere on the page attaches a copied screenshot.
   useEffect(() => {

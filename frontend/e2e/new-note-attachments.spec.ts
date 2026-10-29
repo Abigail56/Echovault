@@ -76,6 +76,25 @@ test.describe("Attachments on the New note page", () => {
     await expect(items.filter({ hasText: "minutes.txt" }).getByText("Text extracted")).toBeVisible({ timeout: 15_000 });
   });
 
+  test("text read from the files is put into the note automatically", async ({ page }) => {
+    await page.getByLabel("Title").fill("Invoice");
+    await page.locator("#knowledge-content").fill("Hosting invoice below.");
+    await chooseFiles(page, [text("invoice.txt", "Northwind Hosting: 40 dollars per month")]);
+    await expect(page.getByTestId("staged-file")).toContainText("Not uploaded yet");
+    await expect(page.getByLabel(/Put the text from these files into the note/)).toBeChecked();
+    await page.getByRole("button", { name: "Save to vault" }).click();
+
+    await expect(page).toHaveURL(/\/vault\/[0-9a-f-]{36}/);
+    const article = page.locator("article");
+    await expect(article.getByRole("heading", { name: "From invoice.txt" })).toBeVisible({ timeout: 20_000 });
+    await expect(article).toContainText("Northwind Hosting: 40 dollars per month");
+    await expect(article).toContainText("Hosting invoice below.");
+    await expect(page).toHaveURL(/\/vault\/[0-9a-f-]{36}$/); // the one-time instruction is removed
+    // Refreshing doesn't add it twice.
+    await page.reload();
+    await expect(article.getByRole("heading", { name: "From invoice.txt" })).toHaveCount(1);
+  });
+
   test("a failed upload keeps everything and retries without a duplicate note", async ({ page }) => {
     let failNext = true;
     await page.route("**/api/v1/knowledge/*/attachments", async (route) => {

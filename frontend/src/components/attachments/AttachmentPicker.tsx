@@ -65,7 +65,7 @@ function StatusLine({ item }: { item: StagedFile }) {
       </p>
     );
   }
-  return <p className="text-meta mt-1 text-xs">Ready. Uploads when you save.</p>;
+  return <p className="text-warning mt-1 text-xs">Not uploaded yet: click Save to vault</p>;
 }
 
 interface AttachmentPickerProps {
