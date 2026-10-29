@@ -109,30 +109,32 @@ const KnowledgeDetailPage: PageWithLayout = () => {
         title={editing ? "Edit note" : k.title}
         breadcrumbs={[{ label: "Vault", href: archived ? "/vault?view=archived" : "/vault" }, { label: k.title }]}
         actions={
-          !editing && (
-            <>
-              <label
-                htmlFor={ATTACH_INPUT_ID}
-                role="button"
-                tabIndex={0}
-                onKeyDown={openPickerOnKey}
-                className="btn btn-sm btn-primary"
-                onClick={() => document.getElementById("attachments")?.scrollIntoView({ behavior: "smooth", block: "start" })}
-              >
-                <Paperclip className="size-4" aria-hidden /> Attach files
-              </label>
-              <button type="button" className="btn btn-sm" onClick={() => setEditing(true)}>
-                <PencilLine className="size-4" aria-hidden /> Edit
-              </button>
-              <button type="button" className="btn btn-sm btn-ghost" onClick={() => toggleArchive(!archived)} disabled={archiving}>
-                {archived ? <ArchiveRestore className="size-4" aria-hidden /> : <Archive className="size-4" aria-hidden />}
-                {archived ? "Restore" : "Archive"}
-              </button>
-              <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => setConfirming(true)}>
-                <Trash2 className="size-4" aria-hidden /> Delete
-              </button>
-            </>
-          )
+          <>
+            <label
+              htmlFor={ATTACH_INPUT_ID}
+              role="button"
+              tabIndex={0}
+              onKeyDown={openPickerOnKey}
+              className="btn btn-sm btn-primary"
+              onClick={() => document.getElementById("attachments")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            >
+              <Paperclip className="size-4" aria-hidden /> Attach files
+            </label>
+            {!editing && (
+              <>
+                <button type="button" className="btn btn-sm" onClick={() => setEditing(true)}>
+                  <PencilLine className="size-4" aria-hidden /> Edit
+                </button>
+                <button type="button" className="btn btn-sm btn-ghost" onClick={() => toggleArchive(!archived)} disabled={archiving}>
+                  {archived ? <ArchiveRestore className="size-4" aria-hidden /> : <Archive className="size-4" aria-hidden />}
+                  {archived ? "Restore" : "Archive"}
+                </button>
+                <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => setConfirming(true)}>
+                  <Trash2 className="size-4" aria-hidden /> Delete
+                </button>
+              </>
+            )}
+          </>
         }
       />
 

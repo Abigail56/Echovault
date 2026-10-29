@@ -179,13 +179,18 @@ export function AttachmentPanel({ noteId, initial, onAddToNote }: AttachmentPane
         data-testid="attachment-dropzone"
       >
         <UploadCloud className="text-primary mx-auto size-8" aria-hidden />
-        <p className="mt-2 text-sm">
-          Drop files here,{" "}
-          {/* A <label> opens the file picker natively: no script needed, so it works in every browser. */}
-          <label htmlFor={ATTACH_INPUT_ID} role="button" tabIndex={0} onKeyDown={openPickerOnKey} className="link link-primary font-semibold">
-            choose files
-          </label>
-          , or paste a screenshot with <kbd className="kbd kbd-sm">Ctrl</kbd>+<kbd className="kbd kbd-sm">V</kbd>
+        {/* A <label> opens the file picker natively: no script needed, so it works in every browser. */}
+        <label
+          htmlFor={ATTACH_INPUT_ID}
+          role="button"
+          tabIndex={0}
+          onKeyDown={openPickerOnKey}
+          className="btn btn-primary mt-3"
+        >
+          <Paperclip className="size-4" aria-hidden /> Choose files from your computer
+        </label>
+        <p className="text-muted mt-3 text-sm">
+          or drag files here, or paste a screenshot with <kbd className="kbd kbd-sm">Ctrl</kbd>+<kbd className="kbd kbd-sm">V</kbd>
         </p>
         <p className="text-meta mt-1">
           Images, PDFs and text files{usage ? `, up to ${formatBytes(usage.max_file_bytes)} each` : ""}. Text inside them is

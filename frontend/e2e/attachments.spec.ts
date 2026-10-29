@@ -42,7 +42,7 @@ test.describe("File and screenshot attachments", () => {
 
     // The attachments box is also available while editing.
     await page.getByRole("button", { name: "Edit" }).click();
-    await expect(page.getByRole("button", { name: "choose files", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Choose files from your computer" })).toBeVisible();
   });
 
   test("dangerous files are refused", async ({ page }) => {
