@@ -55,6 +55,7 @@ export interface KnowledgeSummary {
   tags: string[];
   project: ProjectRef | null;
   archived_at: ISODate | null;
+  attachment_count: number;
   created_at: ISODate;
   updated_at: ISODate;
 }
@@ -68,6 +69,34 @@ export interface KnowledgeRef {
 export interface Knowledge extends KnowledgeSummary {
   content: string;
   related: KnowledgeRef[];
+  attachments: Attachment[];
+}
+
+export type FileKind = "image" | "pdf" | "text";
+/** pending = still reading the text; unavailable = OCR isn't installed on the server. */
+export type ExtractionStatus = "pending" | "done" | "failed" | "unavailable";
+
+export interface Attachment {
+  id: UUID;
+  knowledge_item_id: UUID;
+  filename: string;
+  kind: FileKind;
+  content_type: string;
+  size_bytes: number;
+  extraction_status: ExtractionStatus;
+  text_chars: number;
+  created_at: ISODate;
+}
+
+export interface AttachmentDetail extends Attachment {
+  extracted_text: string;
+}
+
+export interface StorageUsage {
+  used_bytes: number;
+  quota_bytes: number;
+  max_file_bytes: number;
+  ocr_available: boolean;
 }
 
 export interface KnowledgeInput {

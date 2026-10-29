@@ -7,6 +7,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# Tesseract reads text from screenshots (OCR); poppler-utils turns scanned PDF
+# pages into images so they can be OCR'd too.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
@@ -15,8 +21,12 @@ COPY alembic ./alembic
 COPY app ./app
 
 # Run as an unprivileged user.
-RUN useradd --create-home --uid 10001 echovault
+RUN useradd --create-home --uid 10001 echovault \
+    && mkdir -p /app/storage/attachments && chown -R echovault /app/storage
 USER echovault
+
+# Uploaded files live here. Mount a persistent volume on it in production.
+VOLUME ["/app/storage"]
 
 EXPOSE 8000
 # Migrations are run as a separate, explicit step (see README), not on boot.

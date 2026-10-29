@@ -22,3 +22,6 @@ out/
 .DS_Store
 .idea/
 .vscode/
+
+# Uploaded files (local development)
+backend/storage/

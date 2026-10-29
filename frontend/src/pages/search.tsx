@@ -34,7 +34,7 @@ function ResultList({ group, hits, query }: { group: Group; hits: SearchHit[]; q
                 <span className="truncate text-sm font-medium">
                   <Highlight text={hit.title} query={query} />
                 </span>
-                {hit.label && <span className="badge badge-ghost badge-xs shrink-0">{hit.label}</span>}
+                {hit.label && <span className="badge badge-ghost badge-xs max-w-[14rem] truncate">{hit.label}</span>}
               </span>
               <time className="text-meta shrink-0" dateTime={hit.updated_at} title={formatDateTime(hit.updated_at)}>
                 {timeAgo(hit.updated_at)}

@@ -3,10 +3,11 @@
 import uuid
 from typing import Literal
 
-from sqlalchemy import func, literal
+from sqlalchemy import func, literal, or_
 from sqlmodel import Session, col, select
 
 from app.models import Decision, DecisionStatus, KnowledgeItem, KnowledgeTag, Project, ProjectStatus, Tag
+from app.services import attachment_service
 from app.schemas.search import DashboardStats, SearchCounts, SearchHit, SearchResults
 from app.services.search_vectors import (
     build_tsquery,
@@ -42,10 +43,11 @@ def search(
         .join(Tag, col(Tag.id) == col(KnowledgeTag.tag_id))
         .where(Tag.owner_id == owner_id, col(Tag.name).ilike(f"{escape_like(q.strip().lower())}%", escape="\\"))
     )
-    k_filter = [
-        KnowledgeItem.owner_id == owner_id,
-        text_match(kv, tsq, KnowledgeItem.title, q) | col(KnowledgeItem.id).in_(tag_hit),
-    ]
+    k_match = or_(text_match(kv, tsq, KnowledgeItem.title, q), col(KnowledgeItem.id).in_(tag_hit))
+    if tsq is not None:
+        # Text inside attached files and screenshots counts as part of the note.
+        k_match = or_(k_match, col(KnowledgeItem.id).in_(attachment_service.notes_matching(owner_id, tsq)))
+    k_filter = [KnowledgeItem.owner_id == owner_id, k_match]
     pv = project_vector()
     p_filter = [Project.owner_id == owner_id, text_match(pv, tsq, Project.name, q)]
     dv = decision_vector()
@@ -79,17 +81,8 @@ def search(
         select(Decision).where(*d_filter).order_by(_ordering(dv, tsq), col(Decision.updated_at).desc()), "decision"
     )
 
-    knowledge = [
-        SearchHit(
-            type="knowledge",
-            id=k.id,
-            title=k.title,
-            excerpt=make_excerpt(k.content, terms, 180),
-            updated_at=k.updated_at,
-            label="Archived" if k.archived_at else None,
-        )
-        for k in knowledge_rows
-    ]
+    file_texts = attachment_service.texts_for_notes(db, owner_id, [k.id for k in knowledge_rows])
+    knowledge = [_knowledge_hit(k, terms, file_texts.get(k.id, [])) for k in knowledge_rows]
     projects = [
         SearchHit(
             type="project",
@@ -123,6 +116,21 @@ def search(
         limit=limit,
         offset=offset,
     )
+
+
+def _knowledge_hit(k: KnowledgeItem, terms: list[str], files: list[tuple[str, str]]) -> SearchHit:
+    """Show the note's own text, unless the words were only found in an attachment."""
+    excerpt = make_excerpt(k.content, terms, 180)
+    label = "Archived" if k.archived_at else None
+    note_text = (k.title + " " + k.content).lower()
+    if terms and not any(t in note_text for t in terms):
+        for filename, text in files:
+            lowered = (filename + " " + text).lower()
+            if any(t in lowered for t in terms):
+                excerpt = make_excerpt(text, terms, 180) or filename
+                label = f"In attachment: {filename}" if not k.archived_at else f"Archived · in {filename}"
+                break
+    return SearchHit(type="knowledge", id=k.id, title=k.title, excerpt=excerpt, updated_at=k.updated_at, label=label)
 
 
 def _ordering(vector, tsq):

@@ -102,7 +102,9 @@ export function refreshSession(): Promise<boolean> {
 
 async function send(method: Method, path: string, options: RequestOptions = {}): Promise<Response> {
   const headers: Record<string, string> = { Accept: "application/json" };
-  if (options.body !== undefined) headers["Content-Type"] = "application/json";
+  // FormData (file uploads) sets its own multipart Content-Type with a boundary.
+  const isForm = typeof FormData !== "undefined" && options.body instanceof FormData;
+  if (options.body !== undefined && !isForm) headers["Content-Type"] = "application/json";
   if (method !== "GET") {
     const csrf = readCookie("ev_csrf");
     if (csrf) headers["X-CSRF-Token"] = csrf;
@@ -111,7 +113,7 @@ async function send(method: Method, path: string, options: RequestOptions = {}):
     method,
     headers,
     credentials: "include",
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    body: options.body === undefined ? undefined : isForm ? (options.body as FormData) : JSON.stringify(options.body),
     signal: options.signal,
   });
 }
@@ -143,6 +145,12 @@ export const api = {
   post: <T>(path: string, body?: unknown, options?: RequestOptions) => request<T>("POST", path, { ...options, body }),
   patch: <T>(path: string, body: unknown, options?: RequestOptions) => request<T>("PATCH", path, { ...options, body }),
   delete: (path: string, options?: RequestOptions) => request<void>("DELETE", path, options),
+  /** Upload one file as multipart/form-data under the field name "file". */
+  upload: <T>(path: string, file: Blob, filename: string, options?: RequestOptions) => {
+    const form = new FormData();
+    form.append("file", file, filename);
+    return request<T>("POST", path, { ...options, body: form });
+  },
 };
 
 export function errorMessage(error: unknown): string {

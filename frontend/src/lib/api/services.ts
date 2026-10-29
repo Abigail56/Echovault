@@ -1,5 +1,7 @@
-import { api } from "./client";
+import { API_URL, api } from "./client";
 import type {
+  Attachment,
+  AttachmentDetail,
   AssistantAnswer,
   AssistantStatus,
   AuthConfig,
@@ -17,6 +19,7 @@ import type {
   ProjectStatus,
   SearchFilter,
   SearchResults,
+  StorageUsage,
   TagCount,
   User,
   UUID,
@@ -65,6 +68,18 @@ export const knowledgeApi = {
     api.patch<Knowledge>(`/knowledge/${id}`, body),
   remove: (id: UUID) => api.delete(`/knowledge/${id}`),
   tags: () => api.get<TagCount[]>("/tags"),
+};
+
+export const attachmentsApi = {
+  list: (noteId: UUID) => api.get<Attachment[]>(`/knowledge/${noteId}/attachments`),
+  upload: (noteId: UUID, file: Blob, filename: string) =>
+    api.upload<Attachment>(`/knowledge/${noteId}/attachments`, file, filename),
+  get: (id: UUID) => api.get<AttachmentDetail>(`/attachments/${id}`),
+  retry: (id: UUID) => api.post<Attachment>(`/attachments/${id}/extract`),
+  remove: (id: UUID) => api.delete(`/attachments/${id}`),
+  usage: () => api.get<StorageUsage>("/attachments/usage"),
+  /** Same-origin URL (cookies are sent automatically), usable in <img src> and links. */
+  fileUrl: (id: UUID, download = false) => `${API_URL}/attachments/${id}/file${download ? "?download=true" : ""}`,
 };
 
 export interface ProjectQuery {

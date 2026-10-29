@@ -2,6 +2,7 @@ import { Archive, BookOpen, Plus, SearchX } from "lucide-react";
 import Head from "next/head";
 import Link from "next/link";
 
+import { ImportFilesButton } from "@/components/attachments/ImportFilesButton";
 import { KnowledgeCard } from "@/components/knowledge/KnowledgeCard";
 import { appLayout } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -52,9 +53,12 @@ const VaultPage: PageWithLayout = () => {
         title="Vault"
         description="Everything you've captured: ideas, lessons, references and notes."
         actions={
-          <Link href="/vault/new" className="btn btn-primary btn-sm">
-            <Plus className="size-4" aria-hidden /> New item
-          </Link>
+          <>
+            <ImportFilesButton onImported={list.reload} />
+            <Link href="/vault/new" className="btn btn-primary btn-sm">
+              <Plus className="size-4" aria-hidden /> New item
+            </Link>
+          </>
         }
       />
 

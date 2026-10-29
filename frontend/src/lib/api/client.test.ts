@@ -34,6 +34,24 @@ describe("api client", () => {
     expect(postInit?.body).toBe(JSON.stringify({ title: "t" }));
   });
 
+  it("uploads files as multipart form data with the CSRF header", async () => {
+    document.cookie = "ev_csrf=token123; path=/";
+    const fetchMock = mockFetch(json(201, { id: "a1" }));
+
+    await api.upload("/knowledge/n1/attachments", new Blob(["hello"], { type: "text/plain" }), "notes.txt");
+
+    const [url, init] = fetchMock.mock.calls[0];
+    const headers = init?.headers as Record<string, string>;
+    expect(url).toBe("/api/v1/knowledge/n1/attachments");
+    expect(init?.method).toBe("POST");
+    expect(headers["X-CSRF-Token"]).toBe("token123");
+    // The browser must set the multipart boundary itself.
+    expect(headers["Content-Type"]).toBeUndefined();
+    const form = init?.body as FormData;
+    expect(form).toBeInstanceOf(FormData);
+    expect((form.get("file") as File).name).toBe("notes.txt");
+  });
+
   it("refreshes the session once on 401 and retries the request", async () => {
     document.cookie = "ev_csrf=token123; path=/";
     const fetchMock = mockFetch(json(401, { detail: "Session expired" }), json(200, {}), json(200, { id: "me" }));

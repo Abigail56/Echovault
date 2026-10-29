@@ -10,7 +10,7 @@ from typing import Literal
 from sqlalchemy import ColumnElement, TextClause, func, or_, text
 from sqlmodel import col
 
-from app.models import Decision, KnowledgeItem, Project
+from app.models import Attachment, Decision, KnowledgeItem, Project
 
 _WORD = re.compile(r"\w+", re.UNICODE)
 MAX_TERMS = 12
@@ -49,6 +49,10 @@ def decision_vector() -> ColumnElement[str]:
             col(Decision.actual_outcome),
         ),
     )
+
+
+def attachment_vector() -> ColumnElement[str]:
+    return func.to_tsvector(literal_regconfig(), _join(col(Attachment.filename), col(Attachment.extracted_text)))
 
 
 def query_terms(raw: str) -> list[str]:

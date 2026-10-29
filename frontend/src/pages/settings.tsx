@@ -1,4 +1,4 @@
-import { Bot, CheckCircle2, Download, FileText, LogOut, Monitor, Moon, Palette, ShieldCheck, Sun, TriangleAlert, XCircle } from "lucide-react";
+import { Bot, CheckCircle2, Download, FileText, HardDrive, LogOut, Monitor, Moon, Palette, ShieldCheck, Sun, TriangleAlert, XCircle } from "lucide-react";
 import Link from "next/link";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -13,9 +13,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { type ThemePreference, useTheme } from "@/hooks/useTheme";
 import { useToast } from "@/hooks/useToast";
 import { errorMessage } from "@/lib/api/client";
-import { assistantApi, authApi } from "@/lib/api/services";
+import { assistantApi, attachmentsApi, authApi } from "@/lib/api/services";
 import { downloadJson } from "@/lib/download";
-import { formatDate } from "@/lib/format";
+import { formatBytes, formatDate } from "@/lib/format";
 import type { PageWithLayout } from "@/lib/layout";
 
 const THEMES: { value: ThemePreference; label: string; icon: typeof Sun }[] = [
@@ -54,6 +54,7 @@ const SettingsPage: PageWithLayout = () => {
   const router = useRouter();
   const toast = useToast();
   const assistant = useAsync(() => assistantApi.status(), []);
+  const storage = useAsync(() => attachmentsApi.usage(), []);
   const authConfig = useAsync(() => authApi.config(), []);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -111,6 +112,25 @@ const SettingsPage: PageWithLayout = () => {
           </div>
         </Section>
 
+        <Section icon={HardDrive} title="Files & storage" description="Space used by files and screenshots attached to your notes.">
+          {storage.data ? (
+            <div className="text-sm">
+              <progress
+                className="progress progress-primary w-full"
+                value={storage.data.used_bytes}
+                max={storage.data.quota_bytes}
+                aria-label="Storage used"
+              />
+              <p className="text-muted mt-2">
+                {formatBytes(storage.data.used_bytes)} of {formatBytes(storage.data.quota_bytes)} used · up to{" "}
+                {formatBytes(storage.data.max_file_bytes)} per file
+              </p>
+            </div>
+          ) : (
+            <span className="skeleton inline-block h-4 w-48" />
+          )}
+        </Section>
+
         <Section icon={Bot} title="Integrations" description="Configured by the server administrator in backend/.env.">
           <dl className="grid gap-3 text-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -122,6 +142,16 @@ const SettingsPage: PageWithLayout = () => {
                   <Configured ok label={`${assistant.data.provider} · ${assistant.data.model}`} />
                 ) : (
                   <Configured ok={false} label="Not configured" />
+                )}
+              </dd>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <dt>Reading text from screenshots (OCR)</dt>
+              <dd>
+                {storage.loading ? (
+                  <span className="skeleton inline-block h-4 w-24" />
+                ) : (
+                  <Configured ok={Boolean(storage.data?.ocr_available)} label={storage.data?.ocr_available ? "Tesseract installed" : "Not installed"} />
                 )}
               </dd>
             </div>

@@ -6,6 +6,7 @@ then up to head) once per run, and every table is emptied before each test.
 """
 
 import os
+import tempfile
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -26,6 +27,8 @@ os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 os.environ["ENVIRONMENT"] = "test"
 os.environ["AI_PROVIDER"] = ""
 os.environ["SMTP_HOST"] = ""
+# Uploaded files go to a throwaway folder, never the real storage directory.
+os.environ["ATTACHMENTS_DIR"] = tempfile.mkdtemp(prefix="echovault-test-files-")
 os.environ.setdefault("JWT_SECRET_KEY", "test-secret-key-that-is-long-enough-for-hs256")
 
 from alembic import command  # noqa: E402
@@ -40,6 +43,7 @@ from app.db.session import engine  # noqa: E402
 from app.main import app  # noqa: E402
 
 TABLES = [
+    "attachments",
     "knowledge_item_tags",
     "tags",
     "knowledge_items",

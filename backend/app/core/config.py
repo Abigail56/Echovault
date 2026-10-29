@@ -1,8 +1,12 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+BACKEND_DIR = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
@@ -40,6 +44,17 @@ class Settings(BaseSettings):
 
     # Requests larger than this are rejected before reaching the handlers.
     MAX_REQUEST_BYTES: int = 1_000_000
+
+    # File attachments. Files live outside any web-served folder, under random
+    # names; only the owner can download them through the API.
+    ATTACHMENTS_DIR: str = str(BACKEND_DIR / "storage" / "attachments")
+    MAX_UPLOAD_BYTES: int = Field(default=10_000_000, ge=1_000, le=100_000_000)
+    USER_STORAGE_QUOTA_BYTES: int = Field(default=200_000_000, ge=1_000_000)
+    MAX_ATTACHMENTS_PER_NOTE: int = Field(default=20, ge=1, le=100)
+    # Text extraction (OCR uses the free Tesseract engine if installed).
+    OCR_LANGUAGES: str = "eng"
+    OCR_TIMEOUT_SECONDS: int = Field(default=60, ge=5, le=600)
+    PDF_OCR_MAX_PAGES: int = Field(default=10, ge=1, le=100)
 
     # Optional AI provider. Empty AI_PROVIDER disables the assistant.
     AI_PROVIDER: Literal["", "anthropic", "openai_compatible"] = ""
